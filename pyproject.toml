@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "find_quantity"
+description = "find_quantity help solve calcuation of quantity."
+version = "0.0.1"
+authors = [ {name = "Salah Eddine Saoud", email = "saoud92@gmail.com"} ]
+license = {file = "LICENSE"}
+dependencies = [
+]
+
+[project.scripts]
+find_quantity = "find_quantity.app:main"
