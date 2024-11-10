@@ -9,6 +9,7 @@ version = "0.0.1"
 authors = [ {name = "Salah Eddine Saoud", email = "saoud92@gmail.com"} ]
 license = {file = "LICENSE"}
 dependencies = [
+    'pulp'
 ]
 
 [project.scripts]

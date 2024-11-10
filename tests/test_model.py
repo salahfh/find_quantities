@@ -43,7 +43,6 @@ def test_add_same_product_twice_raises_an_error(showroom):
         showroom.add_product(p)
 
 
-# @pytest.mark.skip('Balance function hasn\'t been added yet.')
 def test_calc_quantity_4_products_of_same_price_sold_with_equal_percentages(
     showroom: ShowRoom,
 ):
@@ -52,13 +51,9 @@ def test_calc_quantity_4_products_of_same_price_sold_with_equal_percentages(
         p = create_product()
         showroom.add_product(p)
 
-    showroom.calculate_sales()
-    for sp in showroom.sales:
-        assert sp.sale_total_amount == 25
-        assert sp.units_sold == 2
-
-    assert sum((s.units_sold for s in showroom.sales)) == 8
-    # assert sum((s.units_sold for s in showroom.sales)) == 10
+    showroom.calculate_quantities()
+    assert sum((s.units_sold for s in showroom.sales)) == 10
+    assert sum((s.sale_total_amount for s in showroom.sales)) == 100
 
 
 def test_calc_quantity_for_4_products_of_same_price_sold_with_custom_percentages(
@@ -73,9 +68,9 @@ def test_calc_quantity_for_4_products_of_same_price_sold_with_custom_percentages
             stock_qt=10,
             price=10,
             taxable=True,
-            percentage_sales_history=shares.pop(),
+            max_sales_precentage_from_total_sales=shares.pop(),
         )
         showroom.add_product(p)
-    showroom.calculate_sales(generation_mode="Custom")
-
+    showroom.calculate_quantities()
+    assert sum((s.sale_total_amount for s in showroom.sales)) == 100
     assert sum((s.units_sold for s in showroom.sales)) == 10
