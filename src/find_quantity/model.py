@@ -24,6 +24,12 @@ class Product:
     prix: float
     max_sales_precentage_from_total_sales: float = 0
 
+    def __str__(self):
+        return f"Produit {self.n_article} ({self.prix} DZD | {self.stock_qt} Units)"
+
+    def __repr__(self):
+        return self.__str__()
+
 
 @dataclass
 class Sale:
@@ -43,7 +49,7 @@ class ShowRoom:
     sales: list[Sale] = field(default_factory=list)
 
     def __str__(self):
-        return f"Showroom {self.refrence}"
+        return f"Showroom {self.refrence} ({self.assigned_total_sales} DZD)"
 
     def __repr__(self):
         return self.__str__()
@@ -61,6 +67,12 @@ class Var:
     variable_name: str
     variable_obj: pulp.LpVariable
     sales_formula = None
+
+    @staticmethod
+    def frmt_var_name(name: str) -> str:
+        for char in [' ', '-', '.']:
+            name = name.replace(char, '_')
+        return name
 
 
 class Variables:
@@ -139,7 +151,7 @@ class Solver:
                     variable_name, lowBound=0, upBound=p.stock_qt, cat='Integer'
                 )
                 v = Var(
-                        variable_name=variable_name.replace('-', '_'),
+                        variable_name=Var.frmt_var_name(variable_name),
                         product=p,
                         showroom=sh,
                         variable_obj=variable
@@ -170,6 +182,7 @@ class Solver:
         for solution in prob.variables():
             # logger.debug(f"Solution: {v.name} = {v.varValue}")
             quantity = solution.varValue
+            # print(f"Solution: {solution.name} = {quantity}")
             for v in decision_variables:
                 if solution.name == v.variable_name:
                     sale = Sale(product=v.product, units_sold=int(quantity))

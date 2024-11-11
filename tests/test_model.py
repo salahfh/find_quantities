@@ -7,10 +7,11 @@ import pytest
 def create_product():
     rand = random.randint(1, 100)
     return Product(
-        refrence=f"Refrence_{rand}",
-        name=f"Product_{rand}",
+        designation=f"Refrence_{rand}",
+        n_article=f"Product_{rand}",
+        groupe_code='P1',
         stock_qt=10,
-        price=10,
+        prix=10,
         taxable=True,
     )
 
@@ -63,10 +64,11 @@ def test_calc_quantity_for_4_products_of_same_price_sold_with_custom_percentages
     shares = [0.2, 0.1, 0.2, 0.5]
     for i in range(products_quantity):
         p = Product(
-            refrence=f"Refrence_{i}",
-            name=f"Product_{i}",
+            designation=f"Refrence_{i}",
+            n_article=f"Product_{i}",
             stock_qt=10,
-            price=10,
+            groupe_code='P1',
+            prix=10,
             taxable=True,
             max_sales_precentage_from_total_sales=shares.pop(),
         )
