@@ -1,11 +1,11 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from find_quantity.model import ShowRoom, Product, Sale
 from find_quantity.debug import timer
 
 import pulp
 
-SOLVER_TIME_LIMIT = 120
+SOLVER_TIME_LIMIT = 240
+SOLVER_ACCURACY_LIMIT = 0.001
 
 
 @dataclass
@@ -38,18 +38,18 @@ class Variables:
         return var.product.max_sales_precentage_from_total_sales * \
                 var.showroom.assigned_total_sales
     
-    def get_formula_for_sales_per_showroom(self, sh: ShowRoom) -> pulp.LpConstraint:
-        d = defaultdict(pulp.LpConstraint)
-        for var in self.vars:
-            d[var.showroom.refrence] += var.sales_formula 
-        return d[sh.refrence]
+    # def get_formula_for_sales_per_showroom(self, sh: ShowRoom) -> pulp.LpConstraint:
+    #     d = defaultdict(pulp.LpConstraint)
+    #     for var in self.vars:
+    #         d[var.showroom.refrence] += var.sales_formula 
+    #     return d[sh.refrence]
     
 
 
 class Solver:
     def __init__(self) -> None:
         self.products: list[Product] = list()
-        self.showrooms: list[ShowRoom] = list()
+        self.showroom: ShowRoom
         self.feasable_status: bool = None
         self.solver_options = {
             'keepFiles': 0,
@@ -61,13 +61,13 @@ class Solver:
             'warmStart': False,
         }
 
-    def add_product(self, product: Product) -> None:
-        if product not in self.products:
-            self.products.append(product)
+    def add_products(self, products: list[Product]) -> None:
+        for product in products:
+            if product not in self.products:
+                self.products.append(product)
 
     def add_showroom(self, showroom: ShowRoom) -> None:
-        if showroom not in self.showrooms:
-            self.showrooms.append(showroom)
+        self.showroom = showroom
 
     def is_solution_feasable(self) -> bool | None:
         if self.feasable_status is None:
@@ -91,25 +91,29 @@ class Solver:
         2. Tries to honor the totals max percentage 
         3. Sets the feasable_status after calculation
         '''
-        # solver = pulp.getSolverFromDict(self.solver_options)
-        solver = pulp.PULP_CBC_CMD(timeLimit=SOLVER_TIME_LIMIT, msg=False, gapRel=0.01)
-        prob = pulp.LpProblem("FindQuantities", pulp.LpMinimize)
+        solver = pulp.PULP_CBC_CMD(
+            msg=False,
+            timeLimit=SOLVER_TIME_LIMIT,
+            gapRel=SOLVER_ACCURACY_LIMIT,
+            )
+        # solver = pulp.PULP_CBC_CMD(timeLimit=SOLVER_TIME_LIMIT, msg=False, gapRel=SOLVER_ACCURACY_LIMIT)
+        prob = pulp.LpProblem("FindQuantities", pulp.LpMaximize)
 
         # Variables Qi?
         decision_variables = Variables()
-        for sh in self.showrooms:
-            for p in self.products:
-                variable_name = f"q_{sh.refrence}_{p.n_article}"
-                variable = pulp.LpVariable(
-                    variable_name, lowBound=0, upBound=p.stock_qt, cat='Integer'
-                )
-                v = Var(
-                        variable_name=Var.frmt_var_name(variable_name),
-                        product=p,
-                        showroom=sh,
-                        variable_obj=variable
-                        )
-                decision_variables.add_variable(v)
+        # for sh in self.showrooms:
+        for p in self.products:
+            variable_name = f"q_{p.n_article}"
+            variable = pulp.LpVariable(
+                variable_name, lowBound=0, upBound=p.stock_qt, cat='Integer'
+            )
+            v = Var(
+                    variable_name=Var.frmt_var_name(variable_name),
+                    product=p,
+                    showroom=self.showroom,
+                    variable_obj=variable
+                    )
+            decision_variables.add_variable(v)
 
         for v in decision_variables:
             v.sales_formula = v.variable_obj * v.product.prix
@@ -117,8 +121,7 @@ class Solver:
         prob += formulas
 
         # Objective
-        all_showrooms_sales = sum((sh.assigned_total_sales for sh in self.showrooms))
-        prob += formulas == all_showrooms_sales, "total_sale_matches"
+        prob += formulas == self.showroom.assigned_total_sales, "total_sale_matches"
 
         # Constaints
         # 1. respect percentage of total sales
@@ -126,12 +129,17 @@ class Solver:
             prob += v.sales_formula <= decision_variables.get_max_product_total_sale_per_showroom(v),\
                 f'{v.variable_name} total sales must <= {decision_variables.get_max_product_total_sale_per_showroom(v)}'
 
-        # # 2. Total sales for the showroom should still match
-        # for sh in self.showrooms:
-        #     prob += decision_variables.get_formula_for_sales_per_showroom(sh) == sh.assigned_total_sales
-
-        # print(prob)
+        # Solving the problem 
         self.feasable_status = prob.solve(solver)
+
+        # Debugging
+        # print(prob)
+        print('***')
+        print(f"status: {prob.status}, {pulp.LpStatus[prob.status]}")
+        print(f"objective: {prob.objective.value()}")
+        print('***')
+
+        # Processing solution
         for solution in prob.variables():
             # logger.debug(f"Solution: {v.name} = {v.varValue}")
             quantity = solution.varValue
@@ -182,8 +190,7 @@ if __name__ == '__main__':
 
     solver = Solver()
 
-    for p in [p1, p2, p3, p4]:
-        solver.add_product(p)
+    solver.add_products([p1, p2, p3, p4])
     for sh in [sh1, sh2]:
         solver.add_showroom(sh)
     solver.calculate_quantities()
