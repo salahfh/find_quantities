@@ -1,6 +1,6 @@
 from pathlib import Path
 import csv
-from find_quantity.model import ShowRoom
+from find_quantity.model import ShowRoom, Product
 
 
 class Report:
@@ -19,9 +19,9 @@ class Report:
         if not self.auto_write:
             self.showrooms.append(month, showroom)
         else:
-            self.write_csv_report(showroom=showroom, month=month)
+            self.write_showrooms_report(showroom=showroom, month=month)
 
-    def write_csv_report(self, showroom: ShowRoom, month: int):
+    def write_showrooms_report(self, showroom: ShowRoom, month: int):
         header = ['Showroom', 'N-Article', 'Designation', 'Groupe-Code', 'Prix', 'Quantite', 'Total', 'Correct?']
         filename = self.output_folder / f'month_{month}.csv'
         write_header = False
@@ -45,3 +45,18 @@ class Report:
                     s.sale_total_amount, 
                     showroom.was_calculation_correct()
                 ])
+    
+    def write_remaining_products_report(self, products: list[Product]):
+        with open('data/output/product.csv', 'w') as f:
+            writer = csv.writer(f, lineterminator='\n')
+            writer.writerow(
+                (['Article', 'Initial Quantity', 'Current', 'used']),)
+            for p in products:
+                writer.writerow(
+                    (
+                        p.n_article,
+                        p.stock_qt_intial,
+                        p.stock_qt,
+                        p.stock_qt_intial - p.stock_qt
+                    ),
+                )

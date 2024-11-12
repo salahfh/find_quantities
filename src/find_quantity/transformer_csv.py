@@ -8,6 +8,10 @@ class ProductDuplicatedException(Exception):
     pass
 
 
+class ProductAreAlreadySplit(Exception):
+    pass
+
+
 class MergeSplitProductsMixin:
     '''
     Some products such AC come in two items Ext and Int. 
@@ -16,18 +20,26 @@ class MergeSplitProductsMixin:
 
     def __init__(self, products: list[Product]):
         self.products = products
+        # self.merged_products = None
+
+    def _get_product_stem(self, code: str, prefixes: list[str]) -> str | None:
+        code.replace(' ', '').strip()
+        if any(code.endswith(postfix) == True for postfix in prefixes):
+            return code[:-2]
+        return None
 
     def merge_indoor_outdoor_units(self):
         split_products: dict[str, list[Product]] = defaultdict(list)
         for product in self.products:
-            code = product.n_article.replace(' ', '').strip()
-            if any(code.endswith(postfix) == True for postfix in ['-I', '-O']):
-                code = code[:-2]
+            code = self._get_product_stem(
+                code=product.n_article, prefixes=['-I', '-O'])
+            if code:
                 split_products[code].append(product)
             else:
                 split_products['others'].append(product)
 
-        cleaned_products = []
+        # merged_products: dict[dict[str, list[Product]]] = defaultdict(dict)
+        cleaned_products: list[Product] = []
         for stem, products in split_products.items():
             if stem == 'others' or \
                len(products) == 1:
@@ -48,10 +60,19 @@ class MergeSplitProductsMixin:
                 p1.stock_qt = abs(shared_stock - p1.stock_qt)
                 p2.stock_qt = abs(shared_stock - p2.stock_qt)
                 cleaned_products += [p1, p2, p3]
-        self.products = cleaned_products
 
-    def split_products(self):
-        pass
+                # merged_products[stem]['split'] = [p1, p2]
+                # merged_products[stem]['merged'] = [p3]
+        self.products = cleaned_products
+        # self.merged_products = merged_products
+
+    def split_merged_products(self, products: list[Product], all_inventory_products: list[Product]) -> list[Product]:
+        for p in products:
+            code = self._get_product_stem(code=p.n_article, prefixes=['-C'])
+            if code:
+                for p_inv in all_inventory_products:
+                    if p.n_article.startswith(code) and p == p_inv:
+                        print(p)
 
 
 class Transformers:

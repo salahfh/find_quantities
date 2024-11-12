@@ -10,8 +10,15 @@ def main():
     for i, p_list in enumerate(products.values()):
         month = i+1
         print(f'Month {month}')
-        p_list = ProductTransformer(products=p_list).transform()
+        p_transfomer = ProductTransformer(products=p_list)
+        p_list = p_transfomer.transform()
+        p_transfomer.split_merged_products(
+            products=p_list, all_inventory_products=p_list)
+        # for p in p_transfomer.products:
+        #     # print(p)
 
-    
+        break
+
+
 if __name__ == '__main__':
     main()

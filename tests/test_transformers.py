@@ -2,7 +2,7 @@ from find_quantity.model import Product, gen_test_product
 from find_quantity.transformer_csv import MergeSplitProductsMixin
 
 
-class TestMergeSplitProducts:
+class TestMergeProducts:
     def test_merge_two_products_I_O_equal_quantity(self):
         p1 = gen_test_product(n_article='test-I', stock_qt=10)
         p2 = gen_test_product(n_article='test-O', stock_qt=10)
@@ -58,3 +58,29 @@ class TestMergeSplitProducts:
 
         for p in m.products:
             assert p.stock_qt == 20
+
+class TestSplitProducts:
+
+    def test_split_one_product(self):
+        p1 = gen_test_product(n_article='test-I', stock_qt=10)
+        p2 = gen_test_product(n_article='test-O', stock_qt=10)
+        p3 = gen_test_product(n_article='test-C', prix=20, stock_qt=0)
+        m = MergeSplitProductsMixin(products=[p1, p2])
+        m.merge_indoor_outdoor_units()
+
+        m.split_merged_products()
+        assert len(m.products) == 3
+
+        for p in m.products:
+            if p == p1:
+                p1_ = p
+            if p == p2:
+                p2_ = p
+            if p == p3:
+                p3_ = p
+
+        assert p3_.stock_qt == 0
+        assert p1_.stock_qt == 10
+        assert p2_.stock_qt == 10
+
+

@@ -54,22 +54,7 @@ def main():
 
             # if solved_correctly:
             report.add_showroom(month=month, showroom=sh)
-
-
-
-        with open('data/output/product.csv', 'w') as f:
-            writer = csv.writer(f, lineterminator='\n')
-            writer.writerow(
-                (['Article', 'Initial Quantity', 'Current', 'used']),)
-            for p in inv.products:
-                writer.writerow(
-                    (
-                        p.n_article,
-                        p.stock_qt_intial,
-                        p.stock_qt,
-                        p.stock_qt_intial - p.stock_qt
-                    ),
-                )
+        report.write_remaining_products_report(products=inv.get_products())
         break
 
 
