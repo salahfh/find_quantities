@@ -121,7 +121,7 @@ class Solver:
         prob += formulas
 
         # Objective
-        prob += formulas == self.showroom.assigned_total_sales, "total_sale_matches"
+        prob += formulas == self.showroom.assigned_total_sales , "total_sale_matches"
 
         # Constaints
         # 1. respect percentage of total sales

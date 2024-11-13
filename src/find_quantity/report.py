@@ -1,11 +1,15 @@
+from io import FileIO
 from pathlib import Path
 import csv
 from find_quantity.model import ShowRoom, Product
 
 
 class Report:
-    def __init__(self, auto_write=True) -> None:
-        self.output_folder: Path = Path(f'data/output/')
+    def __init__(self,
+                 auto_write=True,
+                 output_folder: Path =Path(f'data/output/')
+                 ) -> None:
+        self.output_folder: Path = output_folder
         self.showrooms: list[tuple[int, ShowRoom]] = []
         self.auto_write: bool = auto_write
         self.skip_zero_quantities: bool = True
@@ -60,3 +64,33 @@ class Report:
                         p.stock_qt_intial - p.stock_qt
                     ),
                 )
+    
+    def _csv_writer(self, f: FileIO, data: list[list], header: list=None) -> None:
+            writer = csv.writer(f, lineterminator='\n')
+            if header:
+                writer.writerow(header)
+            for line in data:
+                writer.writerow(line)
+    
+    def write_product_obj(self, filename: Path, products: list[Product]):
+        with open(self.output_folder / filename, 'w') as f:
+            header = ['n_article', 'designation', 'groupe_code', 'prix', 'stock_qt']
+            data = [
+                (
+                    p.n_article,
+                    p.designation,
+                    p.groupe_code,
+                    p.prix,
+                    p.stock_qt,
+                ) for p in products]
+            self._csv_writer(f=f, data=data, header=header)
+
+    def write_showroom_obj(self, filename: Path, showrooms: list[ShowRoom]):
+        with open(self.output_folder / filename, 'w') as f:
+            header = ['refreence', 'assigned_total_sales']
+            data = [
+                (
+                    s.refrence,
+                    s.assigned_total_sales
+                ) for s in showrooms]
+            self._csv_writer(f=f, data=data, header=header)

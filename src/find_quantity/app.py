@@ -24,19 +24,28 @@ def print_calculation_output(showroom: ShowRoom):
     print(f'\tDifference? {ratio_difference} ({difference_sales})')
     return solved_correctly
 
-@timer
-def main():
-    products = extract_products(filepath=Path(r'data\produits.csv'))
-    showrooms = extract_showrooms(filepath=Path(r'data\showrooms.csv'))
 
-    report = Report()
+def get_monthly_data(
+        product_filepath: Path = Path(r'data\produits.csv'),
+        showrooms_filepath: Path=Path(r'data\showrooms.csv'),
+        ) -> list[tuple]:
 
+    monthly_data = []
+    products = extract_products(filepath=product_filepath)
+    showrooms = extract_showrooms(filepath=showrooms_filepath)
     for i, (s_list, p_list) in enumerate(zip(showrooms.values(), products.values())):
         month = i+1
         p_list = ProductTransformer(products=p_list).transform()
         s_list = ShowroomTransformer(showrooms=s_list).transform()
-        inv = Inventory(products=p_list)
+        monthly_data.append((month, p_list, s_list))
+    return monthly_data
 
+@timer
+def main():
+    for month, p_list, s_list in get_monthly_data():
+
+        report = Report()
+        inv = Inventory(products=p_list)
         for j, sh in enumerate(s_list):
             print('-' * 20)
             print(f'{j} - Products with positive stock: {len(inv.get_products())}')
@@ -45,15 +54,17 @@ def main():
             solver.add_products(products=inv.get_products())
             solver.add_showroom(sh)
             solver.calculate_quantities()
-            inv.update_quantities(sales=sh.sales)
             solved_correctly = print_calculation_output(showroom=sh)
-            if solver.is_solution_feasable():
-                print(f'Was it solved correct? {solved_correctly}')
+
+            # if solver.is_solution_feasable():
+            if solved_correctly:
+                # print(f'Was it solved correct? {solved_correctly}')
+                inv.update_quantities(sales=sh.sales)
+                report.add_showroom(month=month, showroom=sh)
             else:
                 print(f'{sh.refrence}: Cannot resolve it')
 
             # if solved_correctly:
-            report.add_showroom(month=month, showroom=sh)
         report.write_remaining_products_report(products=inv.get_products())
         break
 
