@@ -117,6 +117,9 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
         self.merge_indoor_outdoor_units()
         return self.products
 
+    def load(self) -> list[Product]:
+        self.clean_fields()
+        return self.products
 
 class ShowroomTransformer(Transformers):
     def __init__(self, showrooms: list[ShowRoom]):
@@ -132,3 +135,6 @@ class ShowroomTransformer(Transformers):
             )
             cleaned.append(s)
         return cleaned
+
+    def load(self) -> list[ShowRoom]:
+        return self.transform()

@@ -1,9 +1,14 @@
 from pathlib import Path
 from find_quantity.extract_csv import extract_showrooms, extract_products
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
+from find_quantity.solver import Solver
 from find_quantity.report import Report
 
+DataLoader = ''
+
 PROJECT_FOLDER = Path(r'data/')
+STEP_ONE_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '1. transform'
+STEP_TWO_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '2. Calculate'
 
 
 class SetupFolderStructure:
@@ -17,7 +22,7 @@ class ProcessFilesCommand:
                  ) -> None:
         self.product_filepath = product_filepath
         self.showrooms_filepath = showrooms_filepath
-        self.output_folder: Path = PROJECT_FOLDER / 'output' / '1. transform'
+        self.output_folder: Path = STEP_ONE_TRANSFORM_PATH
     
     def execute(self) -> None:
         report = Report(output_folder=self.output_folder)
@@ -36,11 +41,42 @@ class ProcessFilesCommand:
 
 class CalculateQuantitiesCommand:
     def __init__(self):
-        self.data_dirpath = Path('data/output')
+        self.input_folder = STEP_ONE_TRANSFORM_PATH
+        self.output_folder = STEP_TWO_TRANSFORM_PATH
     
+    def excute(self):
+        report = Report(output_folder=self.output_folder)
+        # TODO: Rewrite this part and remove the coupling between data and file (mois column?)
+        p_list = extract_products(filepath=self.input_folder / 'products_transformed_1.csv')['mois']
+        s_list = extract_showrooms(filepath=self.input_folder / 'showrooms_transformed_1.csv')['mois']
+        products = ProductTransformer(products=p_list).load()
+        showrooms = ShowroomTransformer(showrooms=s_list).load()
+        # solver = Solver(products=products, showrooms=showrooms).calculate_quantities()
+        for s in showrooms:
+            # print(type(p.stock_qt))
+            print(s)
+
+
+
+class ValidateQuantitiesCommand:
+    def __init__(self):
+        pass
+
     def excute(self):
         pass
 
 
+class FinalFormatingCommand:
+    def __init__(self):
+        pass
+
+    def excute(self):
+        pass
+
+
+
+
+
 if __name__ == '__main__':
-    c = ProcessFilesCommand().execute()
+    # c = ProcessFilesCommand().execute()
+    c = CalculateQuantitiesCommand().excute()

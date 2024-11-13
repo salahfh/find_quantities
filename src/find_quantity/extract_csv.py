@@ -9,11 +9,11 @@ class ProductConstructor:
 
     def from_row(self, row: dict[str, str]) -> Product:
         return self.target_class(
-            n_article=row['N_article'],
-            designation=row['Désignation'],
-            groupe_code=row['Groupe compta. stock'],
-            prix=row['PRIX DE VENTE'],
-            stock_qt=row['Quantité'])
+            n_article=row['n_article'],
+            designation=row['designation'],
+            groupe_code=row['groupe_code'],
+            prix=row['prix'],
+            stock_qt=row['stock_qt'])
 
 
 class ShowroomContructor:
@@ -21,8 +21,8 @@ class ShowroomContructor:
 
     def from_row(self, row: dict[str, str]) -> ShowRoom:
         return self.target_class(
-            refrence=row['Showroom'],
-            assigned_total_sales=row['Total'],
+            refrence=row['refrence'],
+            assigned_total_sales=row['assigned_total_sales'],
         )
 
 
@@ -36,7 +36,10 @@ class Extract:
         with open(self.file_path) as f:
             reader = csv.DictReader(f)
             for line in reader:
-                values[line['mois']].append(self.constructor.from_row(line))
+                if line.get('mois', None):
+                    values[line['mois']].append(self.constructor.from_row(line))
+                else:
+                    values['mois'].append(self.constructor.from_row(line))
         return values
 
     

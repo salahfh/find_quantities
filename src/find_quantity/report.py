@@ -13,7 +13,7 @@ class Report:
         self.showrooms: list[tuple[int, ShowRoom]] = []
         self.auto_write: bool = auto_write
         self.skip_zero_quantities: bool = True
-        self._cleanup()
+        # self._cleanup()
 
     def _cleanup(self):
         for f in self.output_folder.glob('*.csv'):
@@ -87,7 +87,7 @@ class Report:
 
     def write_showroom_obj(self, filename: Path, showrooms: list[ShowRoom]):
         with open(self.output_folder / filename, 'w') as f:
-            header = ['refreence', 'assigned_total_sales']
+            header = ['refrence', 'assigned_total_sales']
             data = [
                 (
                     s.refrence,
