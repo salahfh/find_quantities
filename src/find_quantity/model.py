@@ -68,8 +68,9 @@ class ShowRoom:
     def add_sale(self, product: Product) -> None:
         self.sales.append(product)
     
-    def was_calculation_correct(self) -> bool:
-        return self.assigned_total_sales == sum(s.sale_total_amount for s in self.sales)
+    @property
+    def calculated_total_sales(self) -> bool:
+        return sum(s.sale_total_amount for s in self.sales)
 
 
 class Inventory:
@@ -96,6 +97,9 @@ class Inventory:
     
     def get_products(self):
         return [p for p in self.products if p.stock_qt > 0]
+    
+    def has_products(self):
+        return self.get_products() != []
 
 
 

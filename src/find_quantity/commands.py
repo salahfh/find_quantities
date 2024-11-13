@@ -1,6 +1,7 @@
 from pathlib import Path
 from find_quantity.extract_csv import extract_showrooms, extract_products
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
+from find_quantity.model import Inventory, ShowRoom
 from find_quantity.solver import Solver
 from find_quantity.report import Report
 
@@ -37,7 +38,6 @@ class ProcessFilesCommand:
             report.write_showroom_obj(filename=f'showrooms_transformed_{month}.csv',
                                      showrooms=s_list)
 
-            
 
 class CalculateQuantitiesCommand:
     def __init__(self):
@@ -51,10 +51,23 @@ class CalculateQuantitiesCommand:
         s_list = extract_showrooms(filepath=self.input_folder / 'showrooms_transformed_1.csv')['mois']
         products = ProductTransformer(products=p_list).load()
         showrooms = ShowroomTransformer(showrooms=s_list).load()
-        # solver = Solver(products=products, showrooms=showrooms).calculate_quantities()
-        for s in showrooms:
-            # print(type(p.stock_qt))
-            print(s)
+        inv = Inventory(products=products)
+
+        while inv.has_products():
+            if showrooms:
+                sh = showrooms.pop()
+            else:
+                break
+            solver = Solver()
+            solver.add_products(products=inv.get_products())
+            solver.add_showroom(sh)
+            solver.calculate_quantities()
+            if solver.is_it_solved_correctly():
+                inv.update_quantities(sales=sh.sales)
+                # report.add_showroom(month=month, showroom=sh)
+            else:
+                print(f'{sh.refrence}: Cannot resolve it')
+
 
 
 
