@@ -1,13 +1,15 @@
-from io import FileIO
+from typing import Literal
+from functools import wraps
 from pathlib import Path
 import csv
 from find_quantity.model import ShowRoom, Product
+from find_quantity.solver import Metrics
 
 
 class Report:
     def __init__(self,
                  auto_write=True,
-                 output_folder: Path =Path(f'data/output/')
+                 output_folder: Path = Path(f'data/output/')
                  ) -> None:
         self.output_folder: Path = output_folder
         self.showrooms: list[tuple[int, ShowRoom]] = []
@@ -25,72 +27,79 @@ class Report:
         else:
             self.write_showrooms_report(showroom=showroom, month=month)
 
+    def to_csv(mode: Literal['a', 'w']):
+        '''Define a wrapper for to_csv'''
+        def decorated(func):
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                filename, header, data = func(self, *args, **kwargs)
+                path = Path(self.output_folder / filename)
+                writer_header = True if not path.exists() else False
+                with open(path, mode) as f:
+                    writer = csv.writer(f, lineterminator='\n')
+                    if writer_header:
+                        writer.writerow(header)
+                    for line in data:
+                        writer.writerow(line)
+            return wrapper
+        return decorated
+
+    @to_csv(mode='a')
     def write_showrooms_report(self, showroom: ShowRoom, month: int):
-        header = ['Showroom', 'N-Article', 'Designation', 'Groupe-Code', 'Prix', 'Quantite', 'Total', 'Correct?']
-        filename = self.output_folder / f'month_{month}.csv'
-        write_header = False
-        if not filename.exists():
-            write_header = True
+        header = ['Showroom', 'N-Article', 'Designation',
+                  'Groupe-Code', 'Prix', 'Quantite', 'Total']
+        filename = f'month_{month}.csv'
+        data = [(
+                showroom.refrence,
+                s.product.n_article,
+                s.product.designation,
+                s.product.groupe_code,
+                s.product.prix,
+                s.units_sold,
+                s.sale_total_amount,
+                ) for s in showroom.sales]
+        return filename, header, data
 
-        with open(filename, 'a') as f:
-            writer = csv.writer(f, delimiter=',', lineterminator="\n")
-            if write_header:
-                writer.writerow(header)
-            for s in showroom.sales:
-                if s.units_sold == 0:
-                    continue
-                writer.writerow([
-                    showroom.refrence,
-                    s.product.n_article,
-                    s.product.designation, 
-                    s.product.groupe_code,
-                    s.product.prix,
-                    s.units_sold,
-                    s.sale_total_amount, 
-                    showroom.was_calculation_correct()
-                ])
-    
-    def write_remaining_products_report(self, products: list[Product]):
-        with open('data/output/product.csv', 'w') as f:
-            writer = csv.writer(f, lineterminator='\n')
-            writer.writerow(
-                (['Article', 'Initial Quantity', 'Current', 'used']),)
-            for p in products:
-                writer.writerow(
-                    (
-                        p.n_article,
-                        p.stock_qt_intial,
-                        p.stock_qt,
-                        p.stock_qt_intial - p.stock_qt
-                    ),
-                )
-    
-    def _csv_writer(self, f: FileIO, data: list[list], header: list=None) -> None:
-            writer = csv.writer(f, lineterminator='\n')
-            if header:
-                writer.writerow(header)
-            for line in data:
-                writer.writerow(line)
-    
+    @to_csv(mode='w')
     def write_product_obj(self, filename: Path, products: list[Product]):
-        with open(self.output_folder / filename, 'w') as f:
-            header = ['n_article', 'designation', 'groupe_code', 'prix', 'stock_qt']
-            data = [
-                (
-                    p.n_article,
-                    p.designation,
-                    p.groupe_code,
-                    p.prix,
-                    p.stock_qt,
-                ) for p in products]
-            self._csv_writer(f=f, data=data, header=header)
+        header = ['n_article', 'designation',
+                  'groupe_code', 'prix', 'stock_qt']
+        data = [
+            (
+                p.n_article,
+                p.designation,
+                p.groupe_code,
+                p.prix,
+                p.stock_qt,
+            ) for p in products]
+        return filename, header, data
 
+    @to_csv(mode='w')
     def write_showroom_obj(self, filename: Path, showrooms: list[ShowRoom]):
-        with open(self.output_folder / filename, 'w') as f:
-            header = ['refrence', 'assigned_total_sales']
-            data = [
-                (
-                    s.refrence,
-                    s.assigned_total_sales
-                ) for s in showrooms]
-            self._csv_writer(f=f, data=data, header=header)
+        header = ['refrence', 'assigned_total_sales']
+        data = [
+            (
+                s.refrence,
+                s.assigned_total_sales
+            ) for s in showrooms]
+        return filename, header, data
+
+    @to_csv(mode='a')
+    def write_metrics(self, filename: Path, metrics: Metrics):
+        header = ['refrence', 'assigned_total_sales',
+                  'calculated_total', 'difference', 'diffrence_ratio',
+                  'difference_limit', 'tolerance', 'solver_status',
+                  'products_used']
+        data = [
+            (
+                metrics.showroom.refrence,
+                metrics.s_assigned,
+                metrics.s_calc,
+                metrics.difference,
+                metrics.ratio,
+                metrics.limit,
+                metrics.tolerance,
+                metrics.solver_status_str,
+                metrics.num_products_used
+            )]
+        return filename, header, data

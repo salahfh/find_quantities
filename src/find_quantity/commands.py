@@ -10,6 +10,7 @@ DataLoader = ''
 PROJECT_FOLDER = Path(r'data/')
 STEP_ONE_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '1. transform'
 STEP_TWO_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '2. Calculate'
+STEP_THREE_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '3. Validate'
 
 
 class SetupFolderStructure:
@@ -50,25 +51,32 @@ class CalculateQuantitiesCommand:
         p_list = extract_products(filepath=self.input_folder / 'products_transformed_1.csv')['mois']
         s_list = extract_showrooms(filepath=self.input_folder / 'showrooms_transformed_1.csv')['mois']
         products = ProductTransformer(products=p_list).load()
-        showrooms = ShowroomTransformer(showrooms=s_list).load()
         inv = Inventory(products=products)
 
-        while inv.has_products():
-            if showrooms:
-                sh = showrooms.pop()
-            else:
+        month = 1 ## Change this value later
+
+        showrooms_solved = []
+        for tolerence in [0] + [1 / 10**i for i in [9, 6, 3, 1]]:
+            showrooms = ShowroomTransformer(showrooms=s_list).load()
+
+            print(f'Trying tolerence: {tolerence}')
+            if not inv.has_products():
                 break
-            solver = Solver()
-            solver.add_products(products=inv.get_products())
-            solver.add_showroom(sh)
-            solver.calculate_quantities()
-            if solver.is_it_solved_correctly():
-                inv.update_quantities(sales=sh.sales)
-                # report.add_showroom(month=month, showroom=sh)
-            else:
-                print(f'{sh.refrence}: Cannot resolve it')
-
-
+            for sh in showrooms:
+                if sh in showrooms_solved:
+                    continue
+                solver = Solver(tolerance=tolerence)
+                solver.add_products(products=inv.get_products())
+                solver.add_showroom(sh)
+                solver.calculate_quantities()
+                if solver.is_it_solved_correctly():
+                    inv.update_quantities(sales=sh.sales)
+                    report.add_showroom(month=month, showroom=sh)
+                    report.write_metrics(filename=f'metrics_{month}.csv', metrics=solver.metrics)
+                    showrooms_solved.append(sh)
+                    print(f'{sh.refrence}: found a solution')
+                else:
+                    print(f'{sh.refrence}: Cannot find optimal solution')
 
 
 class ValidateQuantitiesCommand:

@@ -65,6 +65,14 @@ class ShowRoom:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, value):
+        if not isinstance(value, ShowRoom):
+            raise TypeError(f'{type(value)} not supported')
+        return self.refrence == value.refrence
+
+    def __hash__(self):
+        return hash(self.refrence)
+    
     def add_sale(self, product: Product) -> None:
         self.sales.append(product)
     

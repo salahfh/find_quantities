@@ -93,40 +93,4 @@ class TestInvetory:
                 assert pi.stock_qt == 10
                 assert pi.stock_qt_intial == 10
 
-class TestSolver:
-    @pytest.mark.skip('Rewrite this test for solver class')
-    def test_calc_quantity_4_products_of_same_price_sold_with_equal_percentages(
-        self,
-        showroom: ShowRoom,
-    ):
-        products_quantity = 4
-        for _ in range(products_quantity):
-            p = create_product()
-            showroom.add_product(p)
-
-        showroom.calculate_quantities()
-        assert sum((s.units_sold for s in showroom.sales)) == 10
-        assert sum((s.sale_total_amount for s in showroom.sales)) == 100
-
-
-    @pytest.mark.skip('Rewrite this test for solver class')
-    def test_calc_quantity_for_4_products_of_same_price_sold_with_custom_percentages(
-        self,
-        showroom: ShowRoom,
-    ):
-        products_quantity = 4
-        shares = [0.2, 0.1, 0.2, 0.5]
-        for i in range(products_quantity):
-            p = Product(
-                designation=f"Refrence_{i}",
-                n_article=f"Product_{i}",
-                stock_qt=10,
-                groupe_code='P1',
-                prix=10,
-                max_sales_precentage_from_total_sales=shares.pop(),
-            )
-            showroom.add_product(p)
-        showroom.calculate_quantities()
-        assert sum((s.sale_total_amount for s in showroom.sales)) == 100
-        assert sum((s.units_sold for s in showroom.sales)) == 10
 

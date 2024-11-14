@@ -5,7 +5,7 @@ from find_quantity.debug import timer
 import pulp
 
 SOLVER_TIME_LIMIT = 240
-SOLVER_ACCURACY_LIMIT = 0.001
+SOLVER_ACCURACY_LIMIT = 0.001   # is it doing anything?
 
 
 @dataclass
@@ -38,18 +38,52 @@ class Variables:
         return var.product.max_sales_precentage_from_total_sales * \
             var.showroom.assigned_total_sales
 
-    # def get_formula_for_sales_per_showroom(self, sh: ShowRoom) -> pulp.LpConstraint:
-    #     d = defaultdict(pulp.LpConstraint)
-    #     for var in self.vars:
-    #         d[var.showroom.refrence] += var.sales_formula
-    #     return d[sh.refrence]
+
+@dataclass
+class Metrics:
+    showroom: ShowRoom
+    tolerance: float
+    solver_optimal: float
+    solver_status: int
+    solver_status_str: str
+
+    @property
+    def s_calc(self):
+        return self.showroom.calculated_total_sales
+
+    @property
+    def s_assigned(self):
+        return self.showroom.assigned_total_sales
+
+    @property
+    def limit(self) -> float:
+        return self.tolerance * self.s_assigned
+
+    @property
+    def difference(self) -> float:
+        return abs(self.s_assigned - self.s_calc)
+
+    @property
+    def ratio(self) -> float:
+        if self.s_assigned == 0:
+            return 0
+        return round(self.difference / self.s_assigned, 2)
+
+    @property
+    def num_products_used(self) -> int:
+        return len([s for s in self.showroom.sales if s.units_sold > 0])
 
 
 class Solver:
-    def __init__(self, verbose=True) -> None:
+    def __init__(self, tolerance=0) -> None:
+        self.tolerence: float = tolerance
         self.products: list[Product] = list()
         self.showroom: ShowRoom
-        self.verbose: bool = verbose
+        self.metrics: Metrics = None
+
+    @property
+    def limit(self) -> int:
+        return self.showroom.assigned_total_sales * self.tolerence
 
     def add_products(self, products: list[Product]) -> None:
         for product in products:
@@ -60,33 +94,20 @@ class Solver:
         self.showroom = showroom
 
     def is_it_solved_correctly(self):
-        return self.showroom.assigned_total_sales == self.showroom.calculated_total_sales
-
-    def print_solving_ouput(self):
-        difference_sales = abs(
-            self.showroom.calculated_total_sales - self.showroom.assigned_total_sales)
-        if self.showroom.assigned_total_sales == 0:
-            ratio_difference = 0
-        else:
-            ratio_difference = round(
-                abs(difference_sales / self.showroom.assigned_total_sales), 2)
-
-        print('-'* 20)
-        print(f'{self.showroom.refrence}:')
-        print(f'\tCalculated total sales: {self.showroom.calculated_total_sales}')
-        print(f'\tAssigned total sales: {self.showroom.assigned_total_sales}')
-        print(f'\tAre they equal? {self.is_it_solved_correctly()}')
-        print(f'\tDifference? {ratio_difference} ({difference_sales})')
+        calc = self.showroom.calculated_total_sales
+        assigned = self.showroom.assigned_total_sales
+        return (assigned - self.limit) <= calc <= (assigned + self.limit)
 
     @timer
     def calculate_quantities(self) -> None:
         '''
         Calculate the quantities required for each product.
 
-        Solves this equation: T = SUM(Qi *Pi)
+        Solves this equation: T = SUM(Qi *Pi) + Epi
         T: Total Assigned 
         Qi: Quantity of item i
         Pi: Price of item i
+        Epi: Error tolereance
 
         Selection Considerations:
         1. Picks items only with stock
@@ -101,7 +122,6 @@ class Solver:
 
         # Variables Qi?
         decision_variables = Variables()
-        # for sh in self.showrooms:
         for p in self.products:
             variable_name = f"q_{p.n_article}"
             variable = pulp.LpVariable(
@@ -121,7 +141,7 @@ class Solver:
         prob += formulas
 
         # Objective
-        prob += formulas == self.showroom.assigned_total_sales, "total_sale_matches"
+        prob += formulas, 'Total Sales Match'
 
         # Constaints
         # 1. respect percentage of total sales
@@ -130,15 +150,13 @@ class Solver:
                 f'{v.variable_name} total sales must <= {
                     decision_variables.get_max_product_total_sale_per_showroom(v)}'
 
+        upper_bound = self.showroom.assigned_total_sales + self.limit
+        lower_bound = self.showroom.assigned_total_sales - self.limit
+        prob += formulas <= upper_bound
+        prob += formulas >= lower_bound
+
         # Solving the problem
         prob.solve(solver)
-
-        # Debugging
-        # print(prob)
-        # print('***')
-        # print(f"status: {prob.status}, {pulp.LpStatus[prob.status]}")
-        # print(f"objective: {prob.objective.value()}")
-        # print('***')
 
         # Processing solution
         for solution in prob.variables():
@@ -149,57 +167,14 @@ class Solver:
                     v.showroom.add_sale(sale)
                     break
 
-        if self.verbose:
-            self.print_solving_ouput()
+        self.metrics = Metrics(
+            showroom=self.showroom,
+            tolerance=self.tolerence,
+            solver_optimal=prob.objective.value(),
+            solver_status=prob.status,
+            solver_status_str=pulp.LpStatus[prob.status],
+        )
 
 
 if __name__ == '__main__':
-    sh1 = ShowRoom(refrence="sh-bba", assigned_total_sales=1050)
-    sh2 = ShowRoom(refrence="sh-alger", assigned_total_sales=200)
-
-    p1 = Product(
-        designation=f"p{1}",
-        n_article=f"Product_{1}",
-        stock_qt=1000,
-        groupe_code='P1',
-        prix=1,
-        max_sales_precentage_from_total_sales=.31
-    )
-    p2 = Product(
-        designation=f"p{2}",
-        n_article=f"Product_{2}",
-        stock_qt=1000,
-        groupe_code='P1',
-        prix=2,
-        max_sales_precentage_from_total_sales=.2
-    )
-    p3 = Product(
-        designation=f"p{3}",
-        n_article=f"Product_{3}",
-        stock_qt=5000,
-        groupe_code='P1',
-        prix=3.3,
-        max_sales_precentage_from_total_sales=.6
-    )
-    p4 = Product(
-        designation=f"p{4}",
-        n_article=f"Product_{4}",
-        stock_qt=5000,
-        groupe_code='P2',
-        prix=.3,
-        max_sales_precentage_from_total_sales=.3
-    )
-
-    solver = Solver()
-
-    solver.add_products([p1, p2, p3, p4])
-    for sh in [sh1, sh2]:
-        solver.add_showroom(sh)
-    solver.calculate_quantities()
-    for sh in [sh1, sh2]:
-        print(f'{sh.refrence}: total sales: {
-              sum((s.sale_total_amount for s in sh.sales))}')
-        for sale in sh.sales:
-            print(f'\tQuantity: {sale.units_sold} x Price: {
-                  sale.product.prix} = {sale.sale_total_amount}')
-    print(solver.is_solution_feasable())
+    pass
