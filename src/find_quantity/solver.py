@@ -6,6 +6,7 @@ import pulp
 
 SOLVER_TIME_LIMIT = 240
 SOLVER_ACCURACY_LIMIT = 0.001   # is it doing anything?
+SOLVER_MAX_SALES_PRECENTAGE_FROM_TOTAL_SALES = .1
 
 
 @dataclass
@@ -34,9 +35,9 @@ class Variables:
     def add_variable(self, var: Var) -> None:
         self.vars.append(var)
 
-    def get_max_product_total_sale_per_showroom(self, var: Var) -> float:
-        return var.product.max_sales_precentage_from_total_sales * \
-            var.showroom.assigned_total_sales
+    # def get_max_product_total_sale_per_showroom(self, var: Var) -> float:
+    #     return var.product.max_sales_precentage_from_total_sales * \
+    #         var.showroom.assigned_total_sales
 
 
 @dataclass
@@ -46,6 +47,7 @@ class Metrics:
     solver_optimal: float
     solver_status: int
     solver_status_str: str
+    max_product_sales_percentage: float
 
     @property
     def s_calc(self):
@@ -75,11 +77,15 @@ class Metrics:
 
 
 class Solver:
-    def __init__(self, tolerance=0) -> None:
+    def __init__(
+            self, tolerance=0,
+            max_product_sales_percentage=SOLVER_MAX_SALES_PRECENTAGE_FROM_TOTAL_SALES,
+    ) -> None:
         self.tolerence: float = tolerance
         self.products: list[Product] = list()
         self.showroom: ShowRoom
         self.metrics: Metrics = None
+        self.max_product_sales_percentage: float = max_product_sales_percentage
 
     @property
     def limit(self) -> int:
@@ -145,10 +151,11 @@ class Solver:
 
         # Constaints
         # 1. respect percentage of total sales
+        product_usage_limit = self.showroom.assigned_total_sales * \
+            self.max_product_sales_percentage
         for v in decision_variables:
-            prob += v.sales_formula <= decision_variables.get_max_product_total_sale_per_showroom(v), \
-                f'{v.variable_name} total sales must <= {
-                    decision_variables.get_max_product_total_sale_per_showroom(v)}'
+            prob += v.sales_formula <= product_usage_limit, \
+                f'{v.variable_name} total sales must <= {product_usage_limit}'
 
         upper_bound = self.showroom.assigned_total_sales + self.limit
         lower_bound = self.showroom.assigned_total_sales - self.limit
@@ -170,6 +177,7 @@ class Solver:
         self.metrics = Metrics(
             showroom=self.showroom,
             tolerance=self.tolerence,
+            max_product_sales_percentage=self.max_product_sales_percentage,
             solver_optimal=prob.objective.value(),
             solver_status=prob.status,
             solver_status_str=pulp.LpStatus[prob.status],

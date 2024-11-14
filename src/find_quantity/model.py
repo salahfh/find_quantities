@@ -22,7 +22,7 @@ class Product:
     groupe_code: str
     stock_qt: int
     prix: float
-    max_sales_precentage_from_total_sales: float = 0
+    # max_sales_precentage_from_total_sales: float = 0.01
 
     def __str__(self):
         return f"Produit {self.n_article} ({self.prix} DZD | {self.stock_qt} Units)"
@@ -116,7 +116,6 @@ def gen_test_product(
         designation='test designation',
         stock_qt: int=10,
         prix: float=10,
-        max_percentage:float=.10
         ):
     return Product(
         n_article=n_article,
@@ -124,7 +123,6 @@ def gen_test_product(
         groupe_code='',
         stock_qt=stock_qt,
         prix=prix,
-        max_sales_precentage_from_total_sales=max_percentage
     )
 
 if __name__ == "__main__":

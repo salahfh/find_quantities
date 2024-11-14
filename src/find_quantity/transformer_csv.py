@@ -94,10 +94,6 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
     def _fix_stock_qt(self, stock: str) -> int:
         return int(self._fix_numeric_fields(stock))
 
-    def _assign_max_sales_percentage(self,
-                                     percentage: float = MAX_PERCENTAGE_PER_ITEM) -> float:
-        return percentage
-
     def clean_fields(self) -> list[Product]:
         cleaned = []
         for p in self.products:
@@ -107,7 +103,6 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
                 groupe_code=self.strip_white_spaces(p.groupe_code),
                 stock_qt=self._fix_stock_qt(p.stock_qt),
                 prix=self._fix_numeric_fields(p.prix),
-                max_sales_precentage_from_total_sales=self._assign_max_sales_percentage(),
             )
             cleaned.append(p)
         self.products = cleaned

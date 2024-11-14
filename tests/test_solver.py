@@ -6,49 +6,44 @@ from find_quantity.solver import Solver
 
 class TestSolver:
     def test_simple_solver_with_4_products(self):
-        sh = ShowRoom(refrence="sh-bba", assigned_total_sales=1050)
+        sh = ShowRoom(refrence="sh-bba", assigned_total_sales=10)
         p1 = Product(
             designation=f"p{1}",
             n_article=f"Product_{1}",
             stock_qt=1000,
             groupe_code='P1',
             prix=1,
-            max_sales_precentage_from_total_sales=.31
         )
         p2 = Product(
             designation=f"p{2}",
             n_article=f"Product_{2}",
             stock_qt=1000,
             groupe_code='P1',
-            prix=2,
-            max_sales_precentage_from_total_sales=.2
+            prix=3,
         )
         p3 = Product(
             designation=f"p{3}",
             n_article=f"Product_{3}",
             stock_qt=5000,
             groupe_code='P1',
-            prix=3.3,
-            max_sales_precentage_from_total_sales=.6
+            prix=3,
         )
         p4 = Product(
             designation=f"p{4}",
             n_article=f"Product_{4}",
             stock_qt=5000,
             groupe_code='P2',
-            prix=.3,
-            max_sales_precentage_from_total_sales=.3
+            prix=3,
         )
 
         expected_sales = sh.assigned_total_sales
 
-        solver = Solver()
+        solver = Solver(max_product_sales_percentage=.5)
         solver.add_products([p1, p2, p3, p4])
         solver.add_showroom(sh)
         solver.calculate_quantities()
 
-        assert expected_sales == sh.calculated_total_sales   
-
+        assert expected_sales == sh.calculated_total_sales
 
     @pytest.mark.skip('Rewrite this test for solver class')
     def test_calc_quantity_4_products_of_same_price_sold_with_equal_percentages(
@@ -63,7 +58,6 @@ class TestSolver:
         showroom.calculate_quantities()
         assert sum((s.units_sold for s in showroom.sales)) == 10
         assert sum((s.sale_total_amount for s in showroom.sales)) == 100
-
 
     @pytest.mark.skip('Rewrite this test for solver class')
     def test_calc_quantity_for_4_products_of_same_price_sold_with_custom_percentages(

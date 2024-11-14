@@ -57,7 +57,7 @@ class Report:
                 s.product.prix,
                 s.units_sold,
                 s.sale_total_amount,
-                ) for s in showroom.sales]
+                ) for s in showroom.sales if s.units_sold > 0]
         return filename, header, data
 
     @to_csv(mode='w')
@@ -89,7 +89,7 @@ class Report:
         header = ['refrence', 'assigned_total_sales',
                   'calculated_total', 'difference', 'diffrence_ratio',
                   'difference_limit', 'tolerance', 'solver_status',
-                  'products_used']
+                  'products_used', 'max_product_sales_percentage']
         data = [
             (
                 metrics.showroom.refrence,
@@ -100,6 +100,7 @@ class Report:
                 metrics.limit,
                 metrics.tolerance,
                 metrics.solver_status_str,
-                metrics.num_products_used
+                metrics.num_products_used,
+                metrics.max_product_sales_percentage
             )]
         return filename, header, data
