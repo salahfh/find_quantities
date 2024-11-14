@@ -3,14 +3,15 @@ import copy
 from dataclasses import dataclass, field
 
 
-
 logger = logging.getLogger(__name__)
 
 
-class ProductAlreadyAdded(Exception):
+class ProductAlreadyAddedException(Exception):
     """When trying to add the same product more than once, it'll alert you."""
 
-    pass
+
+class CannotCheckoutMoreThanStockQTException(Exception):
+    """When trying to add the same product more than once, it'll alert you."""
 
 
 @dataclass()
@@ -22,7 +23,7 @@ class Product:
     groupe_code: str
     stock_qt: int
     prix: float
-    # max_sales_precentage_from_total_sales: float = 0.01
+    returned: bool = False
 
     def __str__(self):
         return f"Produit {self.n_article} ({self.prix} DZD | {self.stock_qt} Units)"
@@ -32,7 +33,7 @@ class Product:
 
     def __post_init__(self):
         self.stock_qt_intial: int = copy.copy(self.stock_qt)
-    
+
     def __eq__(self, value):
         if not isinstance(value, Product):
             raise TypeError(f'{type(value)} not supported')
@@ -72,10 +73,10 @@ class ShowRoom:
 
     def __hash__(self):
         return hash(self.refrence)
-    
+
     def add_sale(self, product: Product) -> None:
         self.sales.append(product)
-    
+
     @property
     def calculated_total_sales(self) -> bool:
         return sum(s.sale_total_amount for s in self.sales)
@@ -84,6 +85,7 @@ class ShowRoom:
 class Inventory:
     def __init__(self, products: list[Product]):
         self.products: set[Product] = self._add_products(products)
+        self._handle_returned_items()
 
     def _add_products(self, products: list[Product]):
         products_inv: set[Product] = set()
@@ -95,35 +97,47 @@ class Inventory:
                     if p == p_inv:
                         p_inv.stock_qt += p.stock_qt
         return products_inv
-    
+
     def update_quantities(self, sales: list[Sale]):
         for s in sales:
             for p in self.products:
-                if s.product.n_article == p.n_article:
+                if s.product == p:
+                    if p.stock_qt - s.units_sold < 0:
+                        raise CannotCheckoutMoreThanStockQTException(
+                            f'{p}:cannot take {s.units_sold} out of {p.stock_qt}')
                     p.stock_qt -= s.units_sold
                     break
     
+    def _handle_returned_items(self):
+        for p in self.products:
+            if p.stock_qt < 0:
+                p.returned = True
+                p.prix = -1 * p.prix
+                p.stock_qt = -1 * p.stock_qt
+
     def get_products(self):
         return [p for p in self.products if p.stock_qt > 0]
-    
+
     def has_products(self):
         return self.get_products() != []
 
 
-
 def gen_test_product(
-        n_article: str='test',
+        n_article: str = 'test',
         designation='test designation',
-        stock_qt: int=10,
-        prix: float=10,
-        ):
+        stock_qt: int = 10,
+        prix: float = 10,
+        returned: bool = False
+):
     return Product(
         n_article=n_article,
         designation=designation,
         groupe_code='',
         stock_qt=stock_qt,
         prix=prix,
+        returned=returned,
     )
+
 
 if __name__ == "__main__":
     pass
