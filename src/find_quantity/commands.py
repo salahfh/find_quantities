@@ -34,9 +34,9 @@ class ProcessFilesCommand:
             month = i+1
             p_list = ProductTransformer(products=p_list).transform()
             s_list = ShowroomTransformer(showrooms=s_list).transform()
-            report.write_product_obj(filename=f'products_transformed_{month}.csv',
+            report.write_product_obj(month=month,
                                      products=p_list)
-            report.write_showroom_obj(filename=f'showrooms_transformed_{month}.csv',
+            report.write_showroom_obj(month=month,
                                       showrooms=s_list)
 
 
@@ -48,40 +48,43 @@ class CalculateQuantitiesCommand:
     def excute(self):
         report = Report(output_folder=self.output_folder)
         # TODO: Rewrite this part and remove the coupling between data and file (mois column?)
-        p_list = extract_products(
-            filepath=self.input_folder / 'products_transformed_1.csv')['mois']
-        s_list = extract_showrooms(
-            filepath=self.input_folder / 'showrooms_transformed_1.csv')['mois']
-        products = ProductTransformer(products=p_list).load()
-        inv = Inventory(products=products)
 
-        month = 1  # Change this value later
+        for month in range(1, 8):
+            month = str(month)
+            p_list = extract_products(
+                filepath=self.input_folder / f'products_transformed_{month}.csv')[month]
+            s_list = extract_showrooms(
+                filepath=self.input_folder / f'showrooms_transformed_{month}.csv')[month]
+            products = ProductTransformer(products=p_list).load()
+            inv = Inventory(products=products)
 
-        showrooms_solved = []
-        for tolerence in [1 / 10**i for i in [9, 6]]:
-            for max_product_percentage in [.1, .12, .15, .2, .3]:
-                print(
-                    f'Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
-                showrooms = ShowroomTransformer(showrooms=s_list).load()
-                if not inv.has_products():
-                    break
-                for sh in showrooms:
-                    if sh in showrooms_solved:
-                        continue
-                    solver = Solver(
-                        tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
-                    solver.add_products(products=inv.get_products())
-                    solver.add_showroom(sh)
-                    solver.calculate_quantities()
-                    if solver.is_it_solved_correctly():
-                        inv.update_quantities(sales=sh.sales)
-                        report.add_showroom(month=month, showroom=sh)
-                        report.write_metrics(filename=f'metrics_{
-                                             month}.csv', metrics=solver.metrics)
-                        showrooms_solved.append(sh)
-                        print(f'{sh.refrence}: found a solution')
-                    else:
-                        print(f'{sh.refrence}: Cannot find optimal solution')
+            showrooms_solved = []
+            for tolerence in [1 / 10**i for i in [9, 6]]:
+                for max_product_percentage in [.1, .12, .15, .2, .3, .5]:
+                    print(
+                        f'\t{month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
+                    showrooms = ShowroomTransformer(showrooms=s_list).load()
+                    if not inv.has_products():
+                        break
+                    for sh in showrooms:
+                        if sh in showrooms_solved:
+                            continue
+                        solver = Solver(
+                            tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
+                        solver.add_products(products=inv.get_products())
+                        solver.add_showroom(sh)
+                        solver.calculate_quantities()
+                        if solver.is_it_solved_correctly():
+                            inv.update_quantities(sales=sh.sales)
+                            report.write_showrooms_report(month=month, showroom=sh)
+                            report.write_metrics(month=month, metrics=solver.metrics)
+                            showrooms_solved.append(sh)
+                        #     print(f'{sh.refrence}: found a solution')
+                        else:
+                            print(f'{sh.refrence}: Cannot find optimal solution')
+                    # break
+                # break
+            report.write_product_obj(products=inv.get_products(), month=month)
 
 
 class ValidateQuantitiesCommand:

@@ -50,11 +50,31 @@ class TestInvetory:
         inv = Inventory(products=[p])
         assert len(inv.products) == 1
 
+    def test_inventory_add_n_different_products(self):
+        products = []
+        for n in range(1, 10):
+            p = gen_test_product(n_article=f'product_{n}')
+            products.append(p)
+
+        assert len(products) == n
+        inv = Inventory(products=products)
+        assert len(inv.products) == n
+
     def test_add_same_product_twice_update_stock_quantity(self):
         p = gen_test_product(stock_qt=10)
         inv = Inventory(products=[p, p])
         assert len(inv.get_products()) == 1
         assert inv.get_products()[0].stock_qt == 20
+
+    def test_add_same_product_ntimes(self):
+        p = gen_test_product(stock_qt=10)
+        products = []
+        for i in range(1, 10):
+            products.append(p)
+        inv = Inventory(products=products)
+        assert len(inv.get_products()) == 1
+        assert len(products) == i
+        assert inv.get_products()[0].stock_qt == 10 * i
 
     def test_inventory_update_product_quantity_with_one_sale(self):
         p = gen_test_product()

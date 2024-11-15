@@ -151,10 +151,11 @@ class Solver:
 
         # Constaints
         # 1. respect percentage of total sales
-        product_usage_limit = self.showroom.assigned_total_sales * \
-            self.max_product_sales_percentage
+        # product_usage_limit = self.showroom.assigned_total_sales * \
+            # self.max_product_sales_percentage
         for v in decision_variables:
-            prob += v.sales_formula <= product_usage_limit, \
+            product_usage_limit = v.product.stock_qt * self.max_product_sales_percentage
+            prob += v.variable_obj <= product_usage_limit, \
                 f'{v.variable_name} total sales must <= {product_usage_limit}'
 
         upper_bound = self.showroom.assigned_total_sales + self.limit

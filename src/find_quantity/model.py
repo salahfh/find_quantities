@@ -90,12 +90,13 @@ class Inventory:
     def _add_products(self, products: list[Product]):
         products_inv: set[Product] = set()
         for p in products:
-            if p not in products_inv:
-                products_inv.add(p)
+            for p_inv in products_inv:
+                if p_inv == p:
+                    p_inv.stock_qt += p.stock_qt
+                    p_inv.stock_qt_intial += p.stock_qt
+                    break
             else:
-                for p_inv in products_inv:
-                    if p == p_inv:
-                        p_inv.stock_qt += p.stock_qt
+                products_inv.add(copy.copy(p))
         return products_inv
 
     def update_quantities(self, sales: list[Sale]):

@@ -36,10 +36,7 @@ class Extract:
         with open(self.file_path) as f:
             reader = csv.DictReader(f)
             for line in reader:
-                if line.get('mois', None):
-                    values[line['mois']].append(self.constructor.from_row(line))
-                else:
-                    values['mois'].append(self.constructor.from_row(line))
+                values[line['mois']].append(self.constructor.from_row(line))
         return values
 
     

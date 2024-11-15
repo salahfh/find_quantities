@@ -8,24 +8,14 @@ from find_quantity.solver import Metrics
 
 class Report:
     def __init__(self,
-                 auto_write=True,
                  output_folder: Path = Path(f'data/output/')
                  ) -> None:
         self.output_folder: Path = output_folder
-        self.showrooms: list[tuple[int, ShowRoom]] = []
-        self.auto_write: bool = auto_write
         self.skip_zero_quantities: bool = True
-        # self._cleanup()
 
     def _cleanup(self):
         for f in self.output_folder.glob('*.csv'):
             f.unlink()
-
-    def add_showroom(self, month: int, showroom: ShowRoom) -> None:
-        if not self.auto_write:
-            self.showrooms.append(month, showroom)
-        else:
-            self.write_showrooms_report(showroom=showroom, month=month)
 
     def to_csv(mode: Literal['a', 'w']):
         '''Define a wrapper for to_csv'''
@@ -37,7 +27,7 @@ class Report:
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
                     writer = csv.writer(f, lineterminator='\n')
-                    if writer_header:
+                    if writer_header or mode == 'w':
                         writer.writerow(header)
                     for line in data:
                         writer.writerow(line)
@@ -46,10 +36,11 @@ class Report:
 
     @to_csv(mode='a')
     def write_showrooms_report(self, showroom: ShowRoom, month: int):
-        header = ['Showroom', 'N-Article', 'Designation',
-                  'Groupe-Code', 'Prix', 'Quantite', 'Total']
         filename = f'month_{month}.csv'
+        header = ['mois', 'Showroom', 'N-Article', 'Designation',
+                  'Groupe-Code', 'Prix', 'Quantite', 'Total']
         data = [(
+                month,
                 showroom.refrence,
                 s.product.n_article,
                 s.product.designation,
@@ -61,37 +52,44 @@ class Report:
         return filename, header, data
 
     @to_csv(mode='w')
-    def write_product_obj(self, filename: Path, products: list[Product]):
-        header = ['n_article', 'designation',
-                  'groupe_code', 'prix', 'stock_qt']
+    def write_product_obj(self, products: list[Product], month: int):
+        filename=f'products_transformed_{month}.csv'
+        header = ['mois', 'n_article', 'designation',
+                  'groupe_code', 'prix', 'stock_qt', 'intial_stock_qt']
         data = [
             (
+                month,
                 p.n_article,
                 p.designation,
                 p.groupe_code,
                 p.prix,
                 p.stock_qt,
+                p.stock_qt_intial
             ) for p in products]
         return filename, header, data
 
     @to_csv(mode='w')
-    def write_showroom_obj(self, filename: Path, showrooms: list[ShowRoom]):
-        header = ['refrence', 'assigned_total_sales']
+    def write_showroom_obj(self, showrooms: list[ShowRoom], month: int):
+        filename=f'showrooms_transformed_{month}.csv'
+        header = ['mois', 'refrence', 'assigned_total_sales']
         data = [
             (
+                month,
                 s.refrence,
                 s.assigned_total_sales
             ) for s in showrooms]
         return filename, header, data
 
     @to_csv(mode='a')
-    def write_metrics(self, filename: Path, metrics: Metrics):
-        header = ['refrence', 'assigned_total_sales',
+    def write_metrics(self, metrics: Metrics, month: int):
+        filename=f'metrics_{ month}.csv'
+        header = ['mois', 'refrence', 'assigned_total_sales',
                   'calculated_total', 'difference', 'diffrence_ratio',
                   'difference_limit', 'tolerance', 'solver_status',
                   'products_used', 'max_product_sales_percentage']
         data = [
             (
+                month,
                 metrics.showroom.refrence,
                 metrics.s_assigned,
                 metrics.s_calc,
