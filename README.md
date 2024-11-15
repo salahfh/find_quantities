@@ -11,4 +11,5 @@
    1. No tolerance interval
    2. Interval tolerance
    3. Interval tolerence with variable product percetage
-   4. Previous one plus taking negative stock into consideration
+   4. Previous one plus taking negative stock into consideration - bug in inventory function
+   5. Better results
