@@ -131,5 +131,5 @@ class FinalFormatingCommand:
 
 
 if __name__ == '__main__':
-    # c = ProcessFilesCommand().execute()
-    c = CalculateQuantitiesCommand().excute()
+    c = ProcessFilesCommand().execute()
+    # c = CalculateQuantitiesCommand().excute()

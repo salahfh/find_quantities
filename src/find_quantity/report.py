@@ -4,37 +4,17 @@ from pathlib import Path
 import csv
 from find_quantity.model import ShowRoom, Product
 from find_quantity.solver import Metrics
+from find_quantity.commons import IOTools
 
 
 class Report:
     def __init__(self,
                  output_folder: Path = Path(f'data/output/')
                  ) -> None:
-        self.output_folder: Path = output_folder
         self.skip_zero_quantities: bool = True
+        IOTools.working_dir = output_folder
 
-    def _cleanup(self):
-        for f in self.output_folder.glob('*.csv'):
-            f.unlink()
-
-    def to_csv(mode: Literal['a', 'w']):
-        '''Define a wrapper for to_csv'''
-        def decorated(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                filename, header, data = func(self, *args, **kwargs)
-                path = Path(self.output_folder / filename)
-                writer_header = True if not path.exists() else False
-                with open(path, mode) as f:
-                    writer = csv.writer(f, lineterminator='\n')
-                    if writer_header or mode == 'w':
-                        writer.writerow(header)
-                    for line in data:
-                        writer.writerow(line)
-            return wrapper
-        return decorated
-
-    @to_csv(mode='a')
+    @IOTools.to_csv(mode='a')
     def write_showrooms_report(self, showroom: ShowRoom, month: int):
         filename = f'month_{month}.csv'
         header = ['mois', 'Showroom', 'N-Article', 'Designation',
@@ -51,9 +31,9 @@ class Report:
                 ) for s in showroom.sales if s.units_sold > 0]
         return filename, header, data
 
-    @to_csv(mode='w')
+    @IOTools.to_csv(mode='w')
     def write_product_obj(self, products: list[Product], month: int):
-        filename=f'products_transformed_{month}.csv'
+        filename = f'products_transformed_{month}.csv'
         header = ['mois', 'n_article', 'designation',
                   'groupe_code', 'prix', 'stock_qt', 'intial_stock_qt']
         data = [
@@ -68,9 +48,9 @@ class Report:
             ) for p in products]
         return filename, header, data
 
-    @to_csv(mode='w')
+    @IOTools.to_csv(mode='w')
     def write_showroom_obj(self, showrooms: list[ShowRoom], month: int):
-        filename=f'showrooms_transformed_{month}.csv'
+        filename = f'showrooms_transformed_{month}.csv'
         header = ['mois', 'refrence', 'assigned_total_sales']
         data = [
             (
@@ -80,9 +60,9 @@ class Report:
             ) for s in showrooms]
         return filename, header, data
 
-    @to_csv(mode='a')
+    @IOTools.to_csv(mode='a')
     def write_metrics(self, metrics: Metrics, month: int):
-        filename=f'metrics_{ month}.csv'
+        filename = f'metrics_{month}.csv'
         header = ['mois', 'refrence', 'assigned_total_sales',
                   'calculated_total', 'difference', 'diffrence_ratio',
                   'difference_limit', 'tolerance', 'solver_status',
