@@ -4,7 +4,6 @@ from find_quantity.commons import IOTools
 
 
 TEST_FOLDER = Path('tests')
-IOTools.working_dir = TEST_FOLDER
 
 
 def clean_up(path: Path):
@@ -40,9 +39,10 @@ class TestIOTools:
         assert path.exists() == True
         clean_up(path=path)
 
-    def test_reading_from_csv(self, filename):
+    # @pytest.mark.skip('This test has been skip because this behavior has not been implemented')
+    def test_reading_from_csv_with_filename_hardcoded(self, filename):
 
-        @IOTools.from_csv(path=filename)
+        @IOTools.from_csv(default_path= TEST_FOLDER / filename)
         def read_data(data: dict):
             return len(data)
 
@@ -55,4 +55,38 @@ class TestIOTools:
 
         data_length = read_data()
         assert data_length == 1
-        clean_up(path=path)
+        # clean_up(path=path)
+
+    def test_reading_from_csv_with_filename_as_agument_to_function_signature(self, filename):
+
+        @IOTools.from_csv()
+        def read_data(data: dict, path):
+            return len(data)
+
+        path = Path(TEST_FOLDER / filename)
+        with open(path, 'w') as f:
+            f.write(','.join(['one', 'two', 'three', 'four']))
+            f.write('\n')
+            f.write(','.join(['1', '2', '3', '4']))
+            f.write('\n')
+
+        data_length = read_data(path=TEST_FOLDER / filename)
+        assert data_length == 1
+        # clean_up(path=path)
+
+
+    def test_reading_from_csv_with_filename_as_agument_to_function_signature_and_has_default_value(self, filename):
+
+        @IOTools.from_csv()
+        def read_data(data: dict, path= TEST_FOLDER / filename):
+            return len(data)
+
+        path = Path(TEST_FOLDER / filename)
+        with open(path, 'w') as f:
+            f.write(','.join(['one', 'two', 'three', 'four']))
+            f.write('\n')
+            f.write(','.join(['1', '2', '3', '4']))
+            f.write('\n')
+
+        data_length = read_data()
+        assert data_length == 1

@@ -1,56 +1,40 @@
-import csv
 from collections import defaultdict
 from pathlib import Path
 from find_quantity.model import Product, ShowRoom
+from find_quantity.commons import IOTools
 
 
-class ProductConstructor:
-    target_class = Product
+WORKING_DIR = Path(r'data')
+    
 
-    def from_row(self, row: dict[str, str]) -> Product:
-        return self.target_class(
+@IOTools.from_csv(default_path= WORKING_DIR / 'produits.csv')
+def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
+    values = defaultdict(list)
+    for row in data:
+        p = Product(
             n_article=row['n_article'],
             designation=row['designation'],
             groupe_code=row['groupe_code'],
             prix=row['prix'],
-            stock_qt=row['stock_qt'])
+            stock_qt=row['stock_qt'],
+        )
+        values[row['mois']].append(p)
+    return values
 
 
-class ShowroomContructor:
-    target_class = ShowRoom
-
-    def from_row(self, row: dict[str, str]) -> ShowRoom:
-        return self.target_class(
+@IOTools.from_csv(default_path= WORKING_DIR / 'showrooms.csv')
+def extract_showrooms(data:list[dict], path: Path) -> dict[str, list[ShowRoom]]:
+    values = defaultdict(list)
+    for row in data:
+        s = ShowRoom(
             refrence=row['refrence'],
             assigned_total_sales=row['assigned_total_sales'],
         )
+        values[row['mois']].append(s)
+    return values
 
-
-class Extract:
-    def __init__(self, file_path: Path, constractor: ProductConstructor):
-        self.constructor = constractor()
-        self.file_path = file_path
-    
-    def extract(self) -> list[object]:
-        values = defaultdict(list)
-        with open(self.file_path) as f:
-            reader = csv.DictReader(f)
-            for line in reader:
-                values[line['mois']].append(self.constructor.from_row(line))
-        return values
-
-    
-def extract_products(filepath: Path) -> dict[str, list[Product]]:
-    e = Extract(file_path=filepath, constractor=ProductConstructor)
-    return e.extract()
-
-def extract_showrooms(filepath: Path) -> dict[str, list[ShowRoom]]:
-    e = Extract(file_path=filepath, constractor=ShowroomContructor)
-    return e.extract()
 
 if __name__ == '__main__':
-    filepath = Path(r'data\produits.csv')
-    produit = extract_products(filepath=filepath)
-    filepath = Path(r'data\showrooms.csv')
-    showrooms = extract_showrooms(filepath=filepath)
-    print(produit)
+    produit = extract_products()
+    showrooms = extract_showrooms()
+    print(showrooms)

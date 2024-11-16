@@ -20,7 +20,7 @@ class MergeSplitProductsMixin:
 
     def __init__(self, products: list[Product]):
         self.products = products
-        # self.merged_products = None
+        self.merged_products = None
 
     def _get_product_stem(self, code: str, prefixes: list[str]) -> str | None:
         code.replace(' ', '').strip()
@@ -38,7 +38,7 @@ class MergeSplitProductsMixin:
             else:
                 split_products['others'].append(product)
 
-        # merged_products: dict[dict[str, list[Product]]] = defaultdict(dict)
+        merged_products: dict[dict[str, list[Product]]] = defaultdict(dict)
         cleaned_products: list[Product] = []
         for stem, products in split_products.items():
             if stem == 'others' or \
@@ -61,24 +61,36 @@ class MergeSplitProductsMixin:
                 p2.stock_qt = abs(shared_stock - p2.stock_qt)
                 cleaned_products += [p1, p2, p3]
 
-                # merged_products[stem]['split'] = [p1, p2]
-                # merged_products[stem]['merged'] = [p3]
+                merged_products[stem]['split'] = [p1, p2]
+                merged_products[stem]['merged'] = [p3]
         self.products = cleaned_products
-        # self.merged_products = merged_products
+        self.merged_products = merged_products
 
-    def split_merged_products(self, products: list[Product], all_inventory_products: list[Product]) -> list[Product]:
-        for p in products:
+    def split_merged_products(self,
+                              sales_products: list[Product],
+                              all_products: list[Product]
+                              ) -> list[Product]:
+        # find the products that are combined
+        combined_products: list[Product] = []
+        split_products: list[Product] = []
+        # find their equivalant
+        for p in sales_products:
             code = self._get_product_stem(code=p.n_article, prefixes=['-C'])
             if code:
-                for p_inv in all_inventory_products:
-                    if p.n_article.startswith(code) and p == p_inv:
-                        print(p)
+                if p.n_article.startswith(code):
+                    combined_products.append(p)
+        for p_inv in all_products:
+            code = self._get_product_stem(code=p.n_article, prefixes=['-I', '-O'])
+            if code:
+                if p_inv.n_article.startswith(code):
+                    # combined_products.append(p)
+                    print(p_inv)
 
 
 class Transformers:
     def _fix_numeric_fields(self, price: str):
         for char in [' ', ',']:
-            price = price.replace(char, '')
+            price = str(price).replace(char, '')
         if price in ['', '-']:
             return 0
         return float(price)
@@ -115,6 +127,7 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
     def load(self) -> list[Product]:
         self.clean_fields()
         return self.products
+
 
 class ShowroomTransformer(Transformers):
     def __init__(self, showrooms: list[ShowRoom]):

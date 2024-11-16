@@ -32,8 +32,8 @@ class ProcessFilesCommand:
 
     def execute(self) -> None:
         report = Report(output_folder=self.output_folder)
-        products = extract_products(filepath=self.product_filepath)
-        showrooms = extract_showrooms(filepath=self.showrooms_filepath)
+        products = extract_products(path=self.product_filepath)
+        showrooms = extract_showrooms(path=self.showrooms_filepath)
         for i, (s_list, p_list) in enumerate(zip(showrooms.values(), products.values())):
             month = i+1
             p_list = ProductTransformer(products=p_list).transform()
@@ -56,9 +56,9 @@ class CalculateQuantitiesCommand:
         for month in range(1, 8):
             month = str(month)
             p_list = extract_products(
-                filepath=self.input_folder / f'products_transformed_{month}.csv')[month]
+                path=self.input_folder / f'products_transformed_{month}.csv')[month]
             s_list = extract_showrooms(
-                filepath=self.input_folder / f'showrooms_transformed_{month}.csv')[month]
+                path=self.input_folder / f'showrooms_transformed_{month}.csv')[month]
             products = ProductTransformer(products=p_list).load()
             inv = Inventory(products=products)
 
@@ -131,5 +131,5 @@ class FinalFormatingCommand:
 
 
 if __name__ == '__main__':
-    c = ProcessFilesCommand().execute()
-    # c = CalculateQuantitiesCommand().excute()
+    # c = ProcessFilesCommand().execute()
+    c = CalculateQuantitiesCommand().excute()
