@@ -13,13 +13,14 @@ def get_default_args(func: Callable) -> dict:
         if v.default is not inspect.Parameter.empty
     }
 
-def choose_call_arg(target_arg: str, func: Callable, kwargs: dict) -> str:
+def choose_call_arg(target_arg: str, func: Callable, kwargs: dict, hardcoded_value: Path) -> str:
     '''Chose the value for the call argument.
     
     The value supplied in the call takes precedance over the default. 
     Works only with kwargs.'''
     v = kwargs.get(target_arg, None) or \
-            get_default_args(func).get(target_arg)
+            get_default_args(func).get(target_arg) or \
+            hardcoded_value
     assert v is not None, f'{target_arg} must supplied.'
     return v
 
@@ -36,9 +37,9 @@ class IOTools:
         def decorated(func):
             @wraps(func)
             def wrapper(*args, **kwargs) -> list[dict]:
-                path = default_path
-                if path is None:
-                    path = Path(choose_call_arg('path', func, kwargs))
+                # path = default_path 
+                # if path is None:    # the default path arg should be also evaluated
+                path = Path(choose_call_arg('path', func, kwargs, default_path))
                 with open(path, 'r') as f:
                     reader = csv.DictReader(f)
                     data = ([row for row in reader])
