@@ -7,7 +7,7 @@ from find_quantity.transformer_csv import ProductTransformer
 def main():
     filepath = Path(r'data\produits.csv')
     filepath_sales = Path(r"C:\Users\saousa\Scripts\MustafaAcc\data\output\2. Calculate\month_1.csv")
-    products = extract_products(filepath=filepath)
+    products = extract_products(path=filepath)
 
     for i, p_list in enumerate(products.values()):
         month = i+1

@@ -13,8 +13,6 @@ STEP_TWO_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '2. Calculate'
 STEP_THREE_TRANSFORM_PATH = PROJECT_FOLDER / 'output' / '3. Validate'
 SOLVER_ERROR_TOLERANCE = [1 / 10**i for i in [9, 6, 3, 2, 1]]
 SOLVER_PRODUCT_MAX_PERCENTAGE = [.1, .12, .15, .2, .3, .5]
-SOLVER_ERROR_TOLERANCE_HARD = [1 / 10**i for i in [9, 6]]
-SOLVER_PRODUCT_MAX_PERCENTAGE_QUICK = [.1, .12, .15, .2, .3, .5, .8, 1]
 
 
 class SetupFolderStructure:
@@ -36,12 +34,16 @@ class ProcessFilesCommand:
         showrooms = extract_showrooms(path=self.showrooms_filepath)
         for i, (s_list, p_list) in enumerate(zip(showrooms.values(), products.values())):
             month = i+1
-            p_list = ProductTransformer(products=p_list).transform()
+            p_transfomer = ProductTransformer(products=p_list)
+            p_list = p_transfomer.transform()
+            p_merged = p_transfomer.get_merged_products()
             s_list = ShowroomTransformer(showrooms=s_list).transform()
-            report.write_product_obj(month=month,
-                                     products=p_list)
-            report.write_showroom_obj(month=month,
-                                      showrooms=s_list)
+            report.write_product_transformed(month=month,
+                                             products=p_list)
+            report.write_showroom_transformed(month=month,
+                                              showrooms=s_list)
+            report.write_merged_products(month=month,
+                                         merged_products=p_merged)
 
 
 class CalculateQuantitiesCommand:
@@ -51,18 +53,14 @@ class CalculateQuantitiesCommand:
 
     def excute(self):
         report = Report(output_folder=self.output_folder)
-        # TODO: Rewrite this part and remove the coupling between data and file (mois column?)
+        p_list_all = extract_products(path=self.input_folder / f'products_transformed.csv')
+        s_list_all = extract_showrooms(path=self.input_folder / f'showrooms_transformed.csv')
 
-        for month in range(1, 8):
-            month = str(month)
-            p_list = extract_products(
-                path=self.input_folder / f'products_transformed_{month}.csv')[month]
-            s_list = extract_showrooms(
-                path=self.input_folder / f'showrooms_transformed_{month}.csv')[month]
+        for month, p_list, s_list in zip(p_list_all.keys(), p_list_all.values(), s_list_all.values()):
             products = ProductTransformer(products=p_list).load()
             inv = Inventory(products=products)
-
             showrooms_solved: list[ShowRoom] = []
+
             for tolerence in SOLVER_ERROR_TOLERANCE:
                 for max_product_percentage in SOLVER_PRODUCT_MAX_PERCENTAGE:
                     print(
@@ -80,39 +78,14 @@ class CalculateQuantitiesCommand:
                         solver.calculate_quantities()
                         if solver.is_it_solved_correctly():
                             inv.update_quantities(sales=sh.sales)
+                            sh.sales = inv.split_products(sales=sh.sales)
                             report.write_showrooms_report(month=month, showroom=sh)
-                            report.write_metrics(month=month, metrics=solver.metrics)
+                            report.write_metrics(
+                                month=month, metrics=solver.metrics)
                             showrooms_solved.append(sh)
-                        #     print(f'{sh.refrence}: found a solution')
                         else:
                             print(f'{sh.refrence}: Cannot find optimal solution')
             
-            # End of the monthy and all trials:
-            all_sh_assigned_sales = sum([s.assigned_total_sales for s in showrooms_solved])
-            all_sh_calc_sales = sum([s.calculated_total_sales for s in showrooms_solved])
-            sales_diff = all_sh_assigned_sales - all_sh_calc_sales
-            sh = ShowRoom(refrence='Balancing Monthly Total Showroom', assigned_total_sales=sales_diff)
-
-            # for tolerence in SOLVER_ERROR_TOLERANCE:
-            for tolerence in SOLVER_ERROR_TOLERANCE_HARD:
-                for max_product_percentage in SOLVER_PRODUCT_MAX_PERCENTAGE_QUICK:
-                    solver = Solver(
-                        tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
-                    solver.add_products(products=inv.get_products())
-                    solver.add_showroom(sh)
-                    solver.calculate_quantities()
-                    if solver.is_it_solved_correctly():
-                        inv.update_quantities(sales=sh.sales)
-                        report.write_showrooms_report(month=month, showroom=sh)
-                        report.write_metrics(month=month, metrics=solver.metrics)
-                        showrooms_solved.append(sh)
-                        print(f'{sh.refrence}: found a solution - Balancing')
-                    else:
-                        print(f'{sh.refrence}: Cannot find optimal solution - Balancing')
-
-            report.write_product_obj(products=inv.get_products(), month=month)
-            break
-
 
 class ValidateQuantitiesCommand:
     def __init__(self):

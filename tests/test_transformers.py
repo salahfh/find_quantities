@@ -1,4 +1,4 @@
-from find_quantity.model import Product, gen_test_product
+from find_quantity.model import Product, Sale, gen_test_product, ProductMergeSplitTransformer
 from find_quantity.transformer_csv import MergeSplitProductsMixin
 
 
@@ -62,25 +62,102 @@ class TestMergeProducts:
 class TestSplitProducts:
 
     def test_split_one_product(self):
-        p1 = gen_test_product(n_article='test-I', stock_qt=10)
-        p2 = gen_test_product(n_article='test-O', stock_qt=10)
-        p3 = gen_test_product(n_article='test-C', prix=20, stock_qt=0)
-        m = MergeSplitProductsMixin(products=[p1, p2])
-        m.merge_indoor_outdoor_units()
+        p1 = gen_test_product(n_article='test-I', designation='test-I', prix=10, stock_qt=0)
+        p2 = gen_test_product(n_article='test-O', designation='test-O', prix=20, stock_qt=0)
+        p3 = gen_test_product(n_article='test-C', designation='test-c', prix=30, stock_qt=10)
+        s3 = Sale(
+            product=p3,
+            units_sold=5,
+        )
+        sales: list[Sale] = ProductMergeSplitTransformer.split_product(
+            sales=[s3],
+            all_products=[p1, p2]
+        )
+        assert len(sales) == 3
 
-        m.split_merged_products()
-        assert len(m.products) == 3
+        for s in sales:
+            if s.product == p1:
+                assert s.product.stock_qt == p3.stock_qt
+                assert s.product.designation == p1.designation
+                assert s.product.prix == p1.prix 
+                assert s.units_sold == 5
+            if s.product == p2:
+                assert s.product.stock_qt == p3.stock_qt
+                assert s.product.designation == p2.designation
+                assert s.product.prix == p2.prix 
+                assert s.units_sold == 5
+            if s.product == p3:
+                assert s.units_sold == 0
+        
 
-        for p in m.products:
-            if p == p1:
-                p1_ = p
-            if p == p2:
-                p2_ = p
-            if p == p3:
-                p3_ = p
 
-        assert p3_.stock_qt == 0
-        assert p1_.stock_qt == 10
-        assert p2_.stock_qt == 10
+    def test_split_one_product_with_product_has_some_left_over_stock(self):
+        p1 = gen_test_product(n_article='test-I', designation='test-I', prix=10, stock_qt=5)
+        p2 = gen_test_product(n_article='test-O', designation='test-O', prix=20, stock_qt=0)
+        p3 = gen_test_product(n_article='test-C', designation='test-c', prix=30, stock_qt=10)
+        s3 = Sale(
+            product=p3,
+            units_sold=5,
+        )
+        sales: list[Sale] = ProductMergeSplitTransformer.split_product(
+            sales=[s3],
+            all_products=[p1, p2]
+        )
+        assert len(sales) == 3
+
+        for s in sales:
+            if s.product == p1:
+                assert s.product.stock_qt == 15 #p3.stock + p1.stock
+                assert s.units_sold == 5
+            if s.product == p2:
+                assert s.product.stock_qt == p3.stock_qt
+                assert s.units_sold == 5
+            if s.product == p3:
+                assert s.units_sold == 0
 
 
+    def test_split_one_product_assert_copies_of_products_are_changed_not_original_products(self):
+        p1 = gen_test_product(n_article='test-I', designation='test-I', prix=10, stock_qt=0)
+        p2 = gen_test_product(n_article='test-O', designation='test-O', prix=20, stock_qt=0)
+        p3 = gen_test_product(n_article='test-C', designation='test-c', prix=30, stock_qt=10)
+        s3 = Sale(
+            product=p3,
+            units_sold=5,
+        )
+        sales: list[Sale] = ProductMergeSplitTransformer.split_product(
+            sales=[s3],
+            all_products=[p1, p2]
+        )
+
+        assert p1.stock_qt == 0
+        assert p2.stock_qt == 0
+        assert p3.stock_qt == 10
+
+        assert p1.prix == 10
+        assert p2.prix == 20
+        assert p3.prix == 30
+
+    def test_split_one_product_while_other_remain_untouched(self):
+        p1 = gen_test_product(n_article='test-I', designation='test-I', prix=10, stock_qt=0)
+        p2 = gen_test_product(n_article='test-O', designation='test-O', prix=20, stock_qt=0)
+        p3 = gen_test_product(n_article='test-C', designation='test-c', prix=30, stock_qt=10)
+        p4 = gen_test_product(n_article='test-D', designation='test-D', prix=40, stock_qt=12)
+        s3 = Sale(
+            product=p3,
+            units_sold=5,
+        )
+        s4 = Sale(
+            product=p4,
+            units_sold=10
+        )
+        sales: list[Sale] = ProductMergeSplitTransformer.split_product(
+            sales=[s3, s4],
+            all_products=[p1, p2, p3, p4]
+        )
+    
+        assert len(sales) == 4
+
+        for s in sales:
+            if s.product == p4:
+                assert s.product.stock_qt == 12 
+                assert s.units_sold == 10

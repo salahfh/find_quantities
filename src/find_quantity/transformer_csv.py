@@ -1,7 +1,7 @@
 from collections import defaultdict
-from find_quantity.model import Product, ShowRoom
+from copy import copy
+from find_quantity.model import Product, ShowRoom, MergedProduct, Sale
 
-MAX_PERCENTAGE_PER_ITEM = .1
 
 
 class ProductDuplicatedException(Exception):
@@ -38,7 +38,7 @@ class MergeSplitProductsMixin:
             else:
                 split_products['others'].append(product)
 
-        merged_products: dict[dict[str, list[Product]]] = defaultdict(dict)
+        merged_products: list[MergedProduct] = []
         cleaned_products: list[Product] = []
         for stem, products in split_products.items():
             if stem == 'others' or \
@@ -61,30 +61,37 @@ class MergeSplitProductsMixin:
                 p2.stock_qt = abs(shared_stock - p2.stock_qt)
                 cleaned_products += [p1, p2, p3]
 
-                merged_products[stem]['split'] = [p1, p2]
-                merged_products[stem]['merged'] = [p3]
+                merged_products.append(MergedProduct(
+                    code=stem,
+                    p_C=p3,
+                    p_O=p2,
+                    p_I=p1,
+                ))
         self.products = cleaned_products
         self.merged_products = merged_products
 
     def split_merged_products(self,
-                              sales_products: list[Product],
-                              all_products: list[Product]
+                              all_products: list[Product],
+                              products: list[Product],
                               ) -> list[Product]:
-        # find the products that are combined
-        combined_products: list[Product] = []
-        split_products: list[Product] = []
-        # find their equivalant
-        for p in sales_products:
-            code = self._get_product_stem(code=p.n_article, prefixes=['-C'])
+        '''
+        Modify the sales objec to include unmerged_products
+        '''
+        for p_before in products:
+            code = self._get_product_stem(code=p_before.n_article, prefixes=['-C'])
             if code:
-                if p.n_article.startswith(code):
-                    combined_products.append(p)
-        for p_inv in all_products:
-            code = self._get_product_stem(code=p.n_article, prefixes=['-I', '-O'])
-            if code:
-                if p_inv.n_article.startswith(code):
-                    # combined_products.append(p)
-                    print(p_inv)
+                for p in all_products:
+                    p_i_code = self._get_product_stem(code=p_before.n_article, prefixes=['-I'])
+                    p_o_code = self._get_product_stem(code=p_before.n_article, prefixes=['-O'])
+                    if code == p_i_code:
+                        print('Sale Product: ', p_before)
+                        print('all Product: ', p)
+                    if code == p_o_code:
+                        print('Sale Product: ', p_before)
+                        print('all Product: ', p)
+    
+    def get_merged_products(self) -> list[MergedProduct]:
+        return self.merged_products
 
 
 class Transformers:

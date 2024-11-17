@@ -7,8 +7,8 @@ from find_quantity.commons import IOTools
 WORKING_DIR = Path(r'data')
     
 
-@IOTools.from_csv(default_path= WORKING_DIR / 'produits.csv')
-def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
+@IOTools.from_csv()
+def extract_products(data: list[dict], path: Path = WORKING_DIR / 'produits.csv') -> dict[str, list[Product]]:
     values = defaultdict(list)
     for row in data:
         p = Product(
@@ -22,8 +22,8 @@ def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
     return values
 
 
-@IOTools.from_csv(default_path= WORKING_DIR / 'showrooms.csv')
-def extract_showrooms(data:list[dict], path: Path) -> dict[str, list[ShowRoom]]:
+@IOTools.from_csv()
+def extract_showrooms(data:list[dict], path: Path=WORKING_DIR / 'showrooms.csv') -> dict[str, list[ShowRoom]]:
     values = defaultdict(list)
     for row in data:
         s = ShowRoom(
