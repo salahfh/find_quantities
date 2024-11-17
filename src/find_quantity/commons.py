@@ -36,7 +36,7 @@ class IOTools:
         '''
         def decorated(func):
             @wraps(func)
-            def wrapper(*args, **kwargs) -> list[dict]:
+            def wrapper(*args, **kwargs):
                 # path = default_path 
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg('path', func, kwargs, default_path))

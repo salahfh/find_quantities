@@ -127,7 +127,7 @@ class Inventory:
                 p.prix = -1 * p.prix
                 p.stock_qt = -1 * p.stock_qt
 
-    def get_products(self, all: bool=False):
+    def get_products(self, all: bool=False) -> list[Product]:
         if all:
             return self.products
         return [p for p in self.products if p.stock_qt > 0]
@@ -167,7 +167,7 @@ class ProductMergeSplitTransformer:
                     if code == code_inv:
                         p = copy.copy(p_inv)
                         p.stock_qt += s.product.stock_qt
-                        p.stock_qt_intial = s.product.stock_qt_intial
+                        p.stock_qt_intial += s.product.stock_qt_intial
                         new_sales.append(Sale(
                             product=p,
                             units_sold=s.units_sold

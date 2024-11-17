@@ -13,3 +13,6 @@
    3. Interval tolerence with variable product percetage
    4. Previous one plus taking negative stock into consideration - bug in inventory function
    5. Better results
+
+
+CLV-LUX16X - Month 4 - returned product getting doubled? 

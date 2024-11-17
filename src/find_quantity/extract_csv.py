@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from find_quantity.model import Product, ShowRoom
+from find_quantity.model import Product, ShowRoom, Sale
 from find_quantity.commons import IOTools
 
 
@@ -33,6 +33,30 @@ def extract_showrooms(data:list[dict], path: Path=WORKING_DIR / 'showrooms.csv')
         values[row['mois']].append(s)
     return values
 
+
+@IOTools.from_csv()
+def extract_calculation_report(data:list[dict], path: Path) -> dict[str, dict[ShowRoom]]:
+    values = defaultdict(dict[str, ShowRoom])
+    for row in data:
+        sh = ShowRoom(
+            refrence=row['Showroom'],
+            assigned_total_sales=row['Assigned Sales'],
+        )
+        values[row['mois']][row['Showroom']] = sh
+    
+    for row in data:
+        s = Sale(
+            product= Product(
+                n_article=row['N-Article'],
+                designation=row['Designation'],
+                groupe_code=row['Groupe-Code'],
+                prix=row['Prix'],
+                stock_qt=['Initial_stock']
+            ),
+            units_sold=row['Quantite']
+        )
+        values[row['mois']].get(row['Showroom']).add_sale(s)
+    return values
 
 if __name__ == '__main__':
     produit = extract_products()
