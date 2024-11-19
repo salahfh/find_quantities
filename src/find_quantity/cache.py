@@ -1,15 +1,51 @@
+from functools import wraps
 from pathlib import Path
 import pickle
 
 
 CACHE_FILE = Path(r"data\output\2. Calculate\cache.pkl")
 
-def save_cache_to_file(cache: dict, filename: Path=CACHE_FILE):
-    with open(filename, 'wb') as f:
-        pickle.dump(cache, f)
+class Cache:
+    cache_file = CACHE_FILE
+    enabled = True
+    cache: dict = {}
 
-def load_cache_from_file(filename: Path=CACHE_FILE) -> dict:
-    if filename.exists():
-        with open(filename, 'rb') as f:
-            return pickle.load(f)
+    @classmethod
+    def load_cache_from_disk(cls):
+        if cls.cache_file.exists():
+            with open(cls.cache_file, 'rb') as f:
+                cls.cache = pickle.load(f)
     
+    @classmethod
+    def save_cache_to_disk(cls):
+        with open(cls.cache_file, 'wb') as f:
+            pickle.dump(cls.cache, f)
+    
+    def __getitem__(cls, key: tuple) -> object:
+        return cls.cache[key]
+
+    def __setitem__(cls, key: tuple, value: object) -> object:
+        cls.cache[key] = value
+
+    @classmethod
+    def cached(cls, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # key = hash(args + tuple(sorted(kwargs.items())))
+            key = args[1:]
+            result = cls.cache.get(key)
+            if result is None:
+                result = func(*args, **kwargs)
+                cls.cache[key] = result
+            return result   
+        return wrapper
+
+
+if __name__ == '__main__':
+
+    @Cache.cached
+    def fibonacci(n):
+        if n < 2:
+                return n
+        return fibonacci(n-1) + fibonacci(n-2)
+    print(fibonacci(n = 100))

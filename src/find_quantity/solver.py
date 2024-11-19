@@ -1,8 +1,7 @@
 import itertools
 from dataclasses import dataclass
 from find_quantity.model import ShowRoom, Product, Sale, Inventory
-from find_quantity.debug import timer
-from find_quantity.cache import load_cache_from_file, save_cache_to_file
+from find_quantity.cache import Cache
 
 import pulp
 
@@ -109,7 +108,6 @@ class Solver:
         assigned = self.showroom.assigned_total_sales
         return (assigned - self.limit) <= calc <= (assigned + self.limit)
 
-    
     def calculate_quantities(self) -> None:
         '''
         Calculate the quantities required for each product.
@@ -149,7 +147,6 @@ class Solver:
         for v in decision_variables:
             v.sales_formula = v.variable_obj * v.product.prix
         formulas = sum(v.sales_formula for v in decision_variables)
-        prob += formulas
 
         # Objective
         prob += formulas, 'Total Sales Match'
@@ -198,9 +195,11 @@ class SolverRunner:
         self.inventory = inventory
         self.tolerances = SOLVER_ERROR_TOLERANCE
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
+    
+    # def __hash__(self):
+    #     return hash('Solver')
 
-
-    @timer
+    @Cache.cached
     def calc_monthly_quantities(self, sh: ShowRoom, month: int):
         for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
             print(f'\t{ month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
@@ -216,20 +215,8 @@ class SolverRunner:
             else:
                 print(f'{sh.refrence}: Cannot find optimal solution')
         return sh, solver.metrics
-    
-    def cache_calc(self, sh, month):
-        # TODO: Rewrite this later when you resolve the problem 
-        args = (sh, month)
-        cache = load_cache_from_file()
-        if cache is None: 
-            cache = {}
-        result = cache.get(args)
-        if result is None:
-            result = self.calc_monthly_quantities(sh=sh, month=month)
-            cache[args] = result 
-            save_cache_to_file(cache)
-        return result   
 
+    
 
 if __name__ == '__main__':
     pass
