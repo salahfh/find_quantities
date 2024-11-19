@@ -2,6 +2,7 @@ import itertools
 from dataclasses import dataclass
 from find_quantity.model import ShowRoom, Product, Sale, Inventory
 from find_quantity.debug import timer
+from find_quantity.cache import load_cache_from_file, save_cache_to_file
 
 import pulp
 
@@ -108,7 +109,7 @@ class Solver:
         assigned = self.showroom.assigned_total_sales
         return (assigned - self.limit) <= calc <= (assigned + self.limit)
 
-    @timer
+    
     def calculate_quantities(self) -> None:
         '''
         Calculate the quantities required for each product.
@@ -193,16 +194,16 @@ class Solver:
 class SolverRunner:
     def __init__(self,
                  inventory: Inventory,
-                 month: int
                 ):
-        self.month = month
         self.inventory = inventory
         self.tolerances = SOLVER_ERROR_TOLERANCE
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
-    
-    def calc_monthly_quantities(self, sh: ShowRoom):
+
+
+    @timer
+    def calc_monthly_quantities(self, sh: ShowRoom, month: int):
         for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
-            print(f'\t{ self.month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
+            print(f'\t{ month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
             solver = Solver(
                 tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
             solver.add_products(products=self.inventory.get_products())
@@ -215,6 +216,19 @@ class SolverRunner:
             else:
                 print(f'{sh.refrence}: Cannot find optimal solution')
         return sh, solver.metrics
+    
+    def cache_calc(self, sh, month):
+        # TODO: Rewrite this later when you resolve the problem 
+        args = (sh, month)
+        cache = load_cache_from_file()
+        if cache is None: 
+            cache = {}
+        result = cache.get(args)
+        if result is None:
+            result = self.calc_monthly_quantities(sh=sh, month=month)
+            cache[args] = result 
+            save_cache_to_file(cache)
+        return result   
 
 
 if __name__ == '__main__':

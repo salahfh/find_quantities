@@ -48,7 +48,7 @@ class ProcessFilesCommand:
 
 
 class CalculateQuantitiesCommand:
-    def __init__(self):
+    def __init__(self, cache: dict=None):
         self.input_folder = STEP_ONE_TRANSFORM_PATH
         self.output_folder = STEP_TWO_CALCULATE_PATH
 
@@ -64,19 +64,16 @@ class CalculateQuantitiesCommand:
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
             inv = Inventory(products=products)
-            sr = SolverRunner(inventory=inv, month=month)
+            sr = SolverRunner(inventory=inv)
             for sh in showrooms:
-                sh_solved, metrics = sr.calc_monthly_quantities(sh=sh)
+                sh_solved, metrics = sr.cache_calc(sh=sh, month=month)
                 if metrics.solved_correctly:
                     report.write_showrooms_report(month=month, showroom=sh_solved)
                     report.write_metrics(month=month, metrics=metrics)
                 else:
                     unsolved_showrooms.append(sh)
             for sh in unsolved_showrooms:
-                sh_solved, metrics = sr.calc_monthly_quantities(sh=sh)
-                if metrics.solved_correctly:
-                    report.write_showrooms_report(month=month, showroom=sh_solved)
-                    report.write_metrics(month=month, metrics=metrics)
+                print(sh)
 
     # collect non optimal solutions
     # filter out those that were solved

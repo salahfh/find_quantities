@@ -172,3 +172,4 @@ docs/Notes.md
 notebook.ipynb
 cache.sqlite
 tmp*
+*.pkl
