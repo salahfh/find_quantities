@@ -1,5 +1,6 @@
+import itertools
 from dataclasses import dataclass
-from find_quantity.model import ShowRoom, Product, Sale
+from find_quantity.model import ShowRoom, Product, Sale, Inventory
 from find_quantity.debug import timer
 
 import pulp
@@ -7,6 +8,8 @@ import pulp
 SOLVER_TIME_LIMIT = 240
 SOLVER_ACCURACY_LIMIT = 0.001   # is it doing anything?
 SOLVER_MAX_SALES_PRECENTAGE_FROM_TOTAL_SALES = .1
+SOLVER_ERROR_TOLERANCE = [1 / 10**i for i in [9, 6, 3]]
+SOLVER_PRODUCT_MAX_PERCENTAGE = [.1, .12, .15, .2, .3, .5, .7]
 
 
 @dataclass
@@ -48,6 +51,7 @@ class Metrics:
     solver_status: int
     solver_status_str: str
     max_product_sales_percentage: float
+    solved_correctly: bool
 
     @property
     def s_calc(self):
@@ -74,7 +78,7 @@ class Metrics:
     @property
     def num_products_used(self) -> int:
         return len([s for s in self.showroom.sales if s.units_sold > 0])
-
+    
 
 class Solver:
     def __init__(
@@ -182,7 +186,35 @@ class Solver:
             solver_optimal=prob.objective.value(),
             solver_status=prob.status,
             solver_status_str=pulp.LpStatus[prob.status],
+            solved_correctly=self.is_it_solved_correctly()
         )
+
+
+class SolverRunner:
+    def __init__(self,
+                 inventory: Inventory,
+                 month: int
+                ):
+        self.month = month
+        self.inventory = inventory
+        self.tolerances = SOLVER_ERROR_TOLERANCE
+        self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
+    
+    def calc_monthly_quantities(self, sh: ShowRoom):
+        for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
+            print(f'\t{ self.month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
+            solver = Solver(
+                tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
+            solver.add_products(products=self.inventory.get_products())
+            solver.add_showroom(sh)
+            solver.calculate_quantities()
+            if solver.is_it_solved_correctly():
+                self.inventory.update_quantities(sales=sh.sales)
+                sh.sales = self.inventory.split_products(sales=sh.sales)
+                break
+            else:
+                print(f'{sh.refrence}: Cannot find optimal solution')
+        return sh, solver.metrics
 
 
 if __name__ == '__main__':
