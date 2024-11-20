@@ -70,7 +70,7 @@ class Report:
         path = self.output_folder / f'calculation_metrics.csv'
         header = ['mois', 'refrence', 'assigned_total_sales',
                   'calculated_total', 'difference', 'diffrence_ratio',
-                  'difference_limit', 'tolerance', 'solver_status',
+                  'difference_limit', 'tolerance', 
                   'products_used', 'max_product_sales_percentage']
         data = [
             (
@@ -82,7 +82,6 @@ class Report:
                 metrics.ratio,
                 metrics.limit,
                 metrics.tolerance,
-                metrics.solver_status_str,
                 metrics.num_products_used,
                 metrics.max_product_sales_percentage
             )]

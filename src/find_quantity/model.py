@@ -1,6 +1,5 @@
 import logging
 import copy
-from collections import namedtuple
 from dataclasses import dataclass, field
 
 
@@ -130,10 +129,10 @@ class Inventory:
     def get_products(self, all: bool=False) -> list[Product]:
         if all:
             return self.products
-        return [p for p in self.products if p.stock_qt > 0]
+        return tuple(p for p in self.products if p.stock_qt > 0)
 
-    def has_products(self):
-        return self.get_products() != []
+    # def has_products(self):
+    #     return self.get_products() != []
     
 
     def merge_products(self, products: list[Product]) -> list[Product]:

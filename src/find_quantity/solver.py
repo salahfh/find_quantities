@@ -5,9 +5,8 @@ from find_quantity.cache import Cache
 
 import pulp
 
-SOLVER_TIME_LIMIT = 240
+SOLVER_TIME_LIMIT = 20
 SOLVER_ACCURACY_LIMIT = 0.001   # is it doing anything?
-SOLVER_MAX_SALES_PRECENTAGE_FROM_TOTAL_SALES = .1
 SOLVER_ERROR_TOLERANCE = [1 / 10**i for i in [9, 6, 3]]
 SOLVER_PRODUCT_MAX_PERCENTAGE = [.1, .12, .15, .2, .3, .5, .7]
 
@@ -47,9 +46,6 @@ class Variables:
 class Metrics:
     showroom: ShowRoom
     tolerance: float
-    solver_optimal: float
-    solver_status: int
-    solver_status_str: str
     max_product_sales_percentage: float
     solved_correctly: bool
 
@@ -81,34 +77,23 @@ class Metrics:
     
 
 class Solver:
-    def __init__(
-            self, tolerance=0,
-            max_product_sales_percentage=SOLVER_MAX_SALES_PRECENTAGE_FROM_TOTAL_SALES,
-    ) -> None:
-        self.tolerence: float = tolerance
-        self.products: list[Product] = list()
-        self.showroom: ShowRoom
-        self.metrics: Metrics = None
-        self.max_product_sales_percentage: float = max_product_sales_percentage
+    
+    def limit(self, showroom:ShowRoom, tolerance: float) -> int:
+        return showroom.assigned_total_sales * tolerance
 
-    @property
-    def limit(self) -> int:
-        return self.showroom.assigned_total_sales * self.tolerence
+    def is_it_solved_correctly(self, showroom: ShowRoom, tolerance: float):
+        calc = showroom.calculated_total_sales
+        assigned = showroom.assigned_total_sales
+        limit = self.limit(showroom, tolerance)
+        return (assigned - limit) <= calc <= (assigned + limit)
 
-    def add_products(self, products: list[Product]) -> None:
-        for product in products:
-            if product not in self.products:
-                self.products.append(product)
-
-    def add_showroom(self, showroom: ShowRoom) -> None:
-        self.showroom = showroom
-
-    def is_it_solved_correctly(self):
-        calc = self.showroom.calculated_total_sales
-        assigned = self.showroom.assigned_total_sales
-        return (assigned - self.limit) <= calc <= (assigned + self.limit)
-
-    def calculate_quantities(self) -> None:
+    # @Cache.cached
+    def calculate_quantities(self,
+            showroom: ShowRoom,
+            products: tuple[Product],
+            tolerance: float = 1/10*9,
+            max_product_sales_percentage: float=.1
+        ) -> tuple[ShowRoom, Metrics]:
         '''
         Calculate the quantities required for each product.
 
@@ -131,7 +116,7 @@ class Solver:
 
         # Variables Qi?
         decision_variables = Variables()
-        for p in self.products:
+        for p in products:
             variable_name = f"q_{p.n_article}"
             variable = pulp.LpVariable(
                 variable_name, lowBound=0, upBound=p.stock_qt, cat='Integer'
@@ -139,7 +124,7 @@ class Solver:
             v = Var(
                 variable_name=Var.frmt_var_name(variable_name),
                 product=p,
-                showroom=self.showroom,
+                showroom=showroom,
                 variable_obj=variable
             )
             decision_variables.add_variable(v)
@@ -153,15 +138,14 @@ class Solver:
 
         # Constaints
         # 1. respect percentage of total sales
-        # product_usage_limit = self.showroom.assigned_total_sales * \
-            # self.max_product_sales_percentage
         for v in decision_variables:
-            product_usage_limit = v.product.stock_qt * self.max_product_sales_percentage
+            product_usage_limit = v.product.stock_qt * max_product_sales_percentage
             prob += v.variable_obj <= product_usage_limit, \
                 f'{v.variable_name} total sales must <= {product_usage_limit}'
 
-        upper_bound = self.showroom.assigned_total_sales + self.limit
-        lower_bound = self.showroom.assigned_total_sales - self.limit
+        limit = self.limit(showroom, tolerance)
+        upper_bound = showroom.assigned_total_sales + limit
+        lower_bound = showroom.assigned_total_sales - limit
         prob += formulas <= upper_bound
         prob += formulas >= lower_bound
 
@@ -177,15 +161,13 @@ class Solver:
                     v.showroom.add_sale(sale)
                     break
 
-        self.metrics = Metrics(
-            showroom=self.showroom,
-            tolerance=self.tolerence,
-            max_product_sales_percentage=self.max_product_sales_percentage,
-            solver_optimal=prob.objective.value(),
-            solver_status=prob.status,
-            solver_status_str=pulp.LpStatus[prob.status],
-            solved_correctly=self.is_it_solved_correctly()
+        metrics = Metrics(
+            showroom=showroom,
+            tolerance=tolerance,
+            max_product_sales_percentage=max_product_sales_percentage,
+            solved_correctly=self.is_it_solved_correctly(showroom, tolerance)
         )
+        return showroom, metrics
 
 
 class SolverRunner:
@@ -193,6 +175,8 @@ class SolverRunner:
                  inventory: Inventory,
                 ):
         self.inventory = inventory
+        self.products: list[Product] = list()
+        self.showroom: ShowRoom
         self.tolerances = SOLVER_ERROR_TOLERANCE
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
     
@@ -201,18 +185,18 @@ class SolverRunner:
     def calc_monthly_quantities(self, sh: ShowRoom, month: int):
         for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
             print(f'\t{ month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
-            solver = Solver(
-                tolerance=tolerence, max_product_sales_percentage=max_product_percentage)
-            solver.add_products(products=self.inventory.get_products())
-            solver.add_showroom(sh)
-            solver.calculate_quantities()
-            if solver.is_it_solved_correctly():
-                self.inventory.update_quantities(sales=sh.sales)
-                sh.sales = self.inventory.split_products(sales=sh.sales)
+            solver = Solver()
+            sh_solved, metrics = solver.calculate_quantities(
+                showroom=sh,
+                products=self.inventory.get_products(),
+                tolerance=tolerence,
+                max_product_sales_percentage=max_product_percentage,
+            )
+            if metrics.solved_correctly:
+                self.inventory.update_quantities(sales=sh_solved.sales)
+                sh_solved.sales = self.inventory.split_products(sales=sh_solved.sales)
                 break
-            else:
-                print(f'{sh.refrence}: Cannot find optimal solution')
-        return sh, solver.metrics
+        return sh_solved, metrics
 
     
 

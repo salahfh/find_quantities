@@ -38,10 +38,9 @@ class TestSolver:
 
         expected_sales = sh.assigned_total_sales
 
-        solver = Solver(max_product_sales_percentage=.5)
-        solver.add_products([p1, p2, p3, p4])
-        solver.add_showroom(sh)
-        solver.calculate_quantities()
+        solver = Solver()
+        ps = tuple([p1, p2, p3, p4])
+        solver.calculate_quantities(products=ps, showroom=sh, max_product_sales_percentage=.9, tolerance=0)
 
         assert expected_sales == sh.calculated_total_sales
 
