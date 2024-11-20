@@ -1,4 +1,4 @@
-from find_quantity.commands import CalculateQuantitiesCommand
+from find_quantity.commands import CalculateQuantitiesCommand, ProcessFilesCommand
 from find_quantity.cache import Cache
 
 

@@ -51,10 +51,11 @@ def extract_calculation_report(data:list[dict], path: Path) -> dict[str, dict[Sh
                 designation=row['Designation'],
                 groupe_code=row['Groupe-Code'],
                 prix=row['Prix'],
-                stock_qt=['Initial_stock']
+                stock_qt=row['Current_Stock']
             ),
             units_sold=row['Quantite']
         )
+        s.product.stock_qt_intial = row['Initial_stock']
         values[row['mois']].get(row['Showroom']).add_sale(s)
     return values
 

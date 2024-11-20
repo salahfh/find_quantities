@@ -1,6 +1,5 @@
 from collections import defaultdict
-from copy import copy
-from find_quantity.model import Product, ShowRoom, MergedProduct, Sale
+from find_quantity.model import Product, ShowRoom, MergedProduct
 
 
 
@@ -24,7 +23,7 @@ class MergeSplitProductsMixin:
 
     def _get_product_stem(self, code: str, prefixes: list[str]) -> str | None:
         code.replace(' ', '').strip()
-        if any(code.endswith(postfix) == True for postfix in prefixes):
+        if any(code.endswith(postfix) for postfix in prefixes):
             return code[:-2]
         return None
 

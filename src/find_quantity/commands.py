@@ -3,7 +3,7 @@ from find_quantity.extract_csv import extract_showrooms, extract_products, extra
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
 from find_quantity.model import Inventory, ShowRoom
 from find_quantity.report import Report
-from find_quantity.validation_data import ValidationShowroomData
+from find_quantity.data_quality_control import product_validation, validate_calculated_products, validate_extracted_product_raw_data
 from find_quantity.solver import SolverRunner
 
 
@@ -75,13 +75,13 @@ class CalculateQuantitiesCommand:
                 else:
                     unsolved_showrooms.append(sh)
             
-            total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
-            total_montly_calc_sale = sum([sh.calculated_total_sales for sh in unsolved_showrooms])
-            remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
-            sh_global = ShowRoom(refrence='sh1_global', assigned_total_sales=remaining_sale)
-            sh_global_solved, g_metrics = sr.calc_monthly_quantities(sh_global, month)
-            report.write_showrooms_report(month=month, showroom=sh_global_solved)
-            report.write_metrics(month=month, metrics=g_metrics)
+            # total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
+            # total_montly_calc_sale = sum([sh.calculated_total_sales for sh in unsolved_showrooms])
+            # remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
+            # sh_global = ShowRoom(refrence='sh1_global', assigned_total_sales=remaining_sale)
+            # sh_global_solved, g_metrics = sr.calc_monthly_quantities(sh_global, month)
+            # report.write_showrooms_report(month=month, showroom=sh_global_solved)
+            # report.write_metrics(month=month, metrics=g_metrics)
             break
 
 
@@ -99,18 +99,17 @@ class ValidateQuantitiesCommand:
         pass
 
     def excute(self):
-        # raw_products = extract_products(RAW_PRODUCTS_DATA)
+        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
+        raw_products = extract_products(RAW_PRODUCTS_DATA)
         # raw_showrooms = extract_showrooms(RAW_PRODUCTS_DATA)
         calculation_report = extract_calculation_report(
             path=STEP_TWO_CALCULATE_PATH / 'showrooms_calculation_report.csv'
         )
-        for month, showrooms in calculation_report.items():
-            for sh in showrooms.values():
-                ValidationShowroomData(
-                    mois=month,
-                    showroom=sh.refrence,
-                    difference_in_sales= sh.assigned_total_sales - sh.calculated_total_sales,
-                )
+        validation_data_product_calc = validate_calculated_products(calculation_report)
+        simplied_product_raw_data = validate_extracted_product_raw_data(raw_products)
+        data = product_validation(validation_data_product_calc, simplied_product_raw_data)
+        report.valid_product_quantity_report(data)
+
 
 
 class FinalFormatingCommand:
@@ -120,3 +119,6 @@ class FinalFormatingCommand:
     def excute(self):
         pass
 
+
+if __name__ == '__main__':
+    c = ValidateQuantitiesCommand().excute()

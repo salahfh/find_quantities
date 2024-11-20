@@ -1,19 +1,20 @@
 from pathlib import Path
 from find_quantity.model import ShowRoom, Product, MergedProduct
+from find_quantity.data_quality_control import ValidateProductQuantity
 from find_quantity.solver import Metrics
 from find_quantity.commons import IOTools
 
 
 class Report:
     def __init__(self,
-                 output_folder: Path = Path(f'data/output/')
+                 output_folder: Path = Path('data/output/')
                  ) -> None:
         self.skip_zero_quantities: bool = True
         self.output_folder = output_folder
 
     @IOTools.to_csv(mode='a')
     def write_showrooms_report(self, showroom: ShowRoom, month: int, filename_prefix: str=None):
-        path = self.output_folder / f'showrooms_calculation_report.csv'
+        path = self.output_folder / 'showrooms_calculation_report.csv'
         if filename_prefix:
             path = self.output_folder / f'showrooms_calculation_report_{filename_prefix}.csv'
         header = ['mois', 'Showroom', 'Assigned Sales',
@@ -36,7 +37,7 @@ class Report:
 
     @IOTools.to_csv(mode='a')
     def write_product_transformed(self, products: list[Product], month: int, filename_prefix: str=None):
-        path = self.output_folder / f'products_transformed.csv'
+        path = self.output_folder / 'products_transformed.csv'
         if filename_prefix:
             path = self.output_folder / f'products_transformed_{filename_prefix}.csv'
         header = ['mois', 'n_article', 'designation',
@@ -55,7 +56,7 @@ class Report:
 
     @IOTools.to_csv(mode='a')
     def write_showroom_transformed(self, showrooms: list[ShowRoom], month: int):
-        path = self.output_folder / f'showrooms_transformed.csv'
+        path = self.output_folder / 'showrooms_transformed.csv'
         header = ['mois', 'refrence', 'assigned_total_sales']
         data = [
             (
@@ -67,7 +68,7 @@ class Report:
 
     @IOTools.to_csv(mode='a')
     def write_metrics(self, metrics: Metrics, month: int):
-        path = self.output_folder / f'calculation_metrics.csv'
+        path = self.output_folder / 'calculation_metrics.csv'
         header = ['mois', 'refrence', 'assigned_total_sales',
                   'calculated_total', 'difference', 'diffrence_ratio',
                   'difference_limit', 'tolerance', 
@@ -89,7 +90,7 @@ class Report:
 
     @IOTools.to_csv(mode='w')
     def write_merged_products(self, month: int, merged_products: list[MergedProduct]) -> None:
-        path = self.output_folder / f'merged_product.csv'
+        path = self.output_folder / 'merged_product.csv'
         header = ['mois', 'code', 'p1_n_article', 'p1_designation', 'p1_prix',
                   'p2_n_article', 'p2_designation', 'p2_prix', ]
         data = [
@@ -103,4 +104,24 @@ class Report:
                 ps.p_O.designation,
                 ps.p_O.prix,
             ) for ps in merged_products]
+        return path, header, data
+
+    @IOTools.to_csv(mode='w')
+    def valid_product_quantity_report(self, validation_data: list[ValidateProductQuantity]) -> None:
+        path = self.output_folder / 'product_quantity_validation.csv'
+        header = ['mois', 'product_name', 
+                  'calc_remaining_stock', 'calc_all_units_sold', 'calc_stock_initial', 
+                  'calc_stock_diff', 'calculation_correct?',
+                  'raw_data_stock_initial', 'was_raw_data_read_correct?']
+        data = [(
+                v.month,
+                v.product_name,
+                v.calc_stock_qt,
+                v.calc_all_units_sold,
+                v.calc_stock_qt_initial,
+                v.calc_stock_diff,
+                v.is_calc_correct,
+                v.raw_data_stock_initial,
+                v.was_raw_data_read_correctly,
+            ) for v in validation_data]
         return path, header, data

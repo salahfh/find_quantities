@@ -1,3 +1,4 @@
+from typing import NewType
 import logging
 import copy
 from dataclasses import dataclass, field
@@ -14,6 +15,7 @@ class CannotCheckoutMoreThanStockQTException(Exception):
     """When trying to add the same product more than once, it'll alert you."""
 
 
+Month =  NewType('Month', int)
 
 
 @dataclass()
@@ -62,6 +64,9 @@ class Sale:
     @property
     def sale_total_amount(self):
         return self.product.prix * self.units_sold
+    
+    def __repr__(self):
+        return f'Sale {self.product.n_article} (Sold: {self.units_sold})'
 
 
 @dataclass
@@ -84,8 +89,8 @@ class ShowRoom:
     def __hash__(self):
         return hash(self.refrence)
 
-    def add_sale(self, product: Product) -> None:
-        self.sales.append(product)
+    def add_sale(self, sale: Sale) -> None:
+        self.sales.append(sale)
 
     @property
     def calculated_total_sales(self) -> bool:
