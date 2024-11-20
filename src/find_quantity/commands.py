@@ -67,23 +67,22 @@ class CalculateQuantitiesCommand:
             inv = Inventory(products=products)
             sr = SolverRunner(inventory=inv)
             for sh in showrooms:
+                print(f'Working on {sh}')
                 sh_solved, metrics = sr.calc_monthly_quantities(sh, month)
                 if metrics.solved_correctly:
                     report.write_showrooms_report(month=month, showroom=sh_solved)
                     report.write_metrics(month=month, metrics=metrics)
                 else:
                     unsolved_showrooms.append(sh)
-            # Calculate the differnet between total assigned sales monthly
-            # Solve for that equaltion
-            # split the amount based on percentage of particiaption
             
-            # total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
-            # total_montly_calc_sale = sum([sh.calculated_total_sales for sh in showrooms])
-            # remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
-            # sh_global = ShowRoom(refrence='sh_global', assigned_total_sales=remaining_sale)
-            # sh_global_solved, g_metrics = sr.cache_calc(sh=sh_global, month=month)
-            # report.write_showrooms_report(month=month, showroom=sh_global_solved)
-            # report.write_metrics(month=month, metrics=g_metrics)
+            total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
+            total_montly_calc_sale = sum([sh.calculated_total_sales for sh in unsolved_showrooms])
+            remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
+            sh_global = ShowRoom(refrence='sh1_global', assigned_total_sales=remaining_sale)
+            sh_global_solved, g_metrics = sr.calc_monthly_quantities(sh_global, month)
+            report.write_showrooms_report(month=month, showroom=sh_global_solved)
+            report.write_metrics(month=month, metrics=g_metrics)
+            break
 
 
     # collect non optimal solutions

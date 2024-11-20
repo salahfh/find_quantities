@@ -196,8 +196,6 @@ class SolverRunner:
         self.tolerances = SOLVER_ERROR_TOLERANCE
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
     
-    # def __hash__(self):
-    #     return hash('Solver')
 
     @Cache.cached
     def calc_monthly_quantities(self, sh: ShowRoom, month: int):
