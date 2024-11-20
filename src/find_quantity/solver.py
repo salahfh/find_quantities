@@ -194,7 +194,7 @@ class SolverRunner:
             )
             if metrics.solved_correctly:
                 self.inventory.update_quantities(sales=sh_solved.sales)
-                sh_solved.sales = self.inventory.split_products(sales=sh_solved.sales)
+                # sh_solved.sales = self.inventory.split_products(sales=sh_solved.sales)
                 break
         return sh_solved, metrics
 

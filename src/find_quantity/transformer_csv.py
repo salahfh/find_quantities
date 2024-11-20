@@ -73,21 +73,7 @@ class MergeSplitProductsMixin:
                               all_products: list[Product],
                               products: list[Product],
                               ) -> list[Product]:
-        '''
-        Modify the sales objec to include unmerged_products
-        '''
-        for p_before in products:
-            code = self._get_product_stem(code=p_before.n_article, prefixes=['-C'])
-            if code:
-                for p in all_products:
-                    p_i_code = self._get_product_stem(code=p_before.n_article, prefixes=['-I'])
-                    p_o_code = self._get_product_stem(code=p_before.n_article, prefixes=['-O'])
-                    if code == p_i_code:
-                        print('Sale Product: ', p_before)
-                        print('all Product: ', p)
-                    if code == p_o_code:
-                        print('Sale Product: ', p_before)
-                        print('all Product: ', p)
+        pass
     
     def get_merged_products(self) -> list[MergedProduct]:
         return self.merged_products

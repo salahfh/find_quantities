@@ -162,6 +162,10 @@ class ProductMergeSplitTransformer:
 
     @staticmethod
     def split_product(sales: list[Sale], all_products:list[Product]) -> list[Product]:
+        '''
+        Split combined products -C and return three sales for each with unit sold reset to 0
+        for the -C sale and units allocated to the others.
+        '''
         new_sales: list[Sale] = []
         for s in sales:
             code = ProductMergeSplitTransformer._find_product_stem(s.product.n_article, prefix=['-C'])

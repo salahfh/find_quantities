@@ -33,7 +33,7 @@ class Cache:
         def wrapper(*args, **kwargs):
             # key = hash(args + tuple(sorted(kwargs.items())))
             key = args[1:]
-            result = cls.cache.get(key)
+            result = cls.cache.get(key) if cls.enabled else None
             if result is None:
                 result = func(*args, **kwargs)
                 cls.cache[key] = result

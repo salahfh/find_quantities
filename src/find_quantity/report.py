@@ -111,6 +111,7 @@ class Report:
         path = self.output_folder / 'product_quantity_validation.csv'
         header = ['mois', 'product_name', 
                   'calc_remaining_stock', 'calc_all_units_sold', 'calc_stock_initial', 
+                  'calc_stock_initial_min',
                   'calc_stock_diff', 'calculation_correct?',
                   'raw_data_stock_initial', 'was_raw_data_read_correct?']
         data = [(
@@ -119,6 +120,7 @@ class Report:
                 v.calc_stock_qt,
                 v.calc_all_units_sold,
                 v.calc_stock_qt_initial,
+                v.calc_stock_qt_initial_min,
                 v.calc_stock_diff,
                 v.is_calc_correct,
                 v.raw_data_stock_initial,

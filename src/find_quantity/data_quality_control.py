@@ -12,6 +12,7 @@ class ValidateProductQuantity:
     calc_stock_qt: int
     calc_stock_qt_initial: int
     calc_all_units_sold: int
+    calc_stock_qt_initial_min: int
     raw_data_stock_initial: int = 0
 
     @property
@@ -47,12 +48,14 @@ def validate_calculated_products(calculation_report: dict) -> list[ValidateProdu
         for product_name, sales in sales.items():
             stock_qt=min([int(s.product.stock_qt) for s in sales])
             stock_qt_intial=max([int(s.product.stock_qt_intial) for s in sales])
+            calc_stock_qt_initial_min=min([int(s.product.stock_qt_intial) for s in sales])
             all_units_sold = sum([int(s.units_sold) for s in sales])
             v = ValidateProductQuantity(
                 month=month,
                 product_name=product_name,
                 calc_stock_qt=stock_qt,
                 calc_stock_qt_initial=stock_qt_intial,
+                calc_stock_qt_initial_min=calc_stock_qt_initial_min,
                 calc_all_units_sold=all_units_sold
             )
             product_validation.append(v)
