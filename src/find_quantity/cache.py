@@ -1,3 +1,4 @@
+from typing import Callable
 from functools import wraps
 from pathlib import Path
 import pickle
@@ -28,17 +29,23 @@ class Cache:
         cls.cache[key] = value
 
     @classmethod
-    def cached(cls, func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # key = hash(args + tuple(sorted(kwargs.items())))
-            key = args[1:]
-            result = cls.cache.get(key) if cls.enabled else None
-            if result is None:
-                result = func(*args, **kwargs)
-                cls.cache[key] = result
-            return result   
-        return wrapper
+    def cached(cls, _func=None, *, include_only: Callable=lambda x: x):
+        def decorated(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                # key = hash(args + tuple(sorted(kwargs.items())))
+                key = args[1:]
+                result = cls.cache.get(key) if cls.enabled else None
+                result = result if include_only(result) else None
+                if result is None:
+                    result = func(*args, **kwargs)
+                    cls.cache[key] = result
+                return result   
+            return wrapper
+        if _func is None:
+            return decorated
+        else:
+            return decorated(_func)
 
 
 if __name__ == '__main__':

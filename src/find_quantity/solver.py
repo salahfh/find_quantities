@@ -181,7 +181,8 @@ class SolverRunner:
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
     
 
-    @Cache.cached
+    # @Cache.cached
+    @Cache.cached(include_only=lambda x: x[1].solved_correctly)
     def calc_monthly_quantities(self, sh: ShowRoom, month: int):
         for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
             print(f'\t{ month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')

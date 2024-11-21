@@ -3,7 +3,7 @@ from find_quantity.cache import Cache
 
 
 if __name__ == '__main__':
-    Cache.enabled = False
+    # Cache.enabled = False
     Cache.load_cache_from_disk()
     try:
         # c = ProcessFilesCommand().execute()

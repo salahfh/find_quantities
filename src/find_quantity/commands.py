@@ -75,6 +75,8 @@ class CalculateQuantitiesCommand:
                 else:
                     unsolved_showrooms.append(sh)
             
+            for sh in unsolved_showrooms:
+                print(sh)
             # total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
             # total_montly_calc_sale = sum([sh.calculated_total_sales for sh in unsolved_showrooms])
             # remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
