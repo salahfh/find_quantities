@@ -29,14 +29,13 @@ class Cache:
         cls.cache[key] = value
 
     @classmethod
-    def cached(cls, _func=None, *, include_only: Callable=lambda x: x):
+    def cached(cls, _func=None, *, include_only_fltr: Callable=lambda x: x):
         def decorated(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                # key = hash(args + tuple(sorted(kwargs.items())))
-                key = args[1:]
+                key = args + tuple(sorted(kwargs.items()))
                 result = cls.cache.get(key) if cls.enabled else None
-                result = result if include_only(result) else None
+                result = result if result and include_only_fltr(result) else None
                 if result is None:
                     result = func(*args, **kwargs)
                     cls.cache[key] = result

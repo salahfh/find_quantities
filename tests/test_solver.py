@@ -1,7 +1,7 @@
 import pytest
 
-from find_quantity.model import ShowRoom, Product, gen_test_product
-from find_quantity.solver import Solver
+from find_quantity.model import ShowRoom, Product, gen_test_product, Sale
+from find_quantity.solver import Solver, SolverRunner
 
 
 class TestSolver:
@@ -38,9 +38,9 @@ class TestSolver:
 
         expected_sales = sh.assigned_total_sales
 
-        solver = Solver()
         ps = tuple([p1, p2, p3, p4])
-        solver.calculate_quantities(products=ps, showroom=sh, max_product_sales_percentage=.9, tolerance=0)
+        solver = Solver(ps)
+        solver.calculate_quantities(showroom=sh, max_product_sales_percentage=.9, tolerance=0)
 
         assert expected_sales == sh.calculated_total_sales
 
@@ -78,3 +78,77 @@ class TestSolver:
         showroom.calculate_quantities()
         assert sum((s.sale_total_amount for s in showroom.sales)) == 100
         assert sum((s.units_sold for s in showroom.sales)) == 10
+
+
+class TestSolverRunner:
+    def test_assign_new_sale_value_but_product_were_sold(self):
+        # arrange
+        s1 = ShowRoom(refrence='sh1', assigned_total_sales=100)
+        s2 = ShowRoom(refrence='sh2', assigned_total_sales=50)
+        s3 = ShowRoom(refrence='sh3', assigned_total_sales=100)
+        s4 = ShowRoom(refrence='sh4', assigned_total_sales=250)
+        all_showrooms = [s1, s2, s3, s4]
+        unsolved_showrooms = [s1, s2, s3, s4]
+        sr = SolverRunner(inventory='')
+        
+        # act
+        _ = sr.assign_new_sale_values(unsolved_showrooms,all_showrooms)
+        assert round(sum([sh.assigned_total_sales for sh in all_showrooms]), 0) == 500
+
+             
+        # assert
+        assert s1.assigned_total_sales != 100
+        assert s2.assigned_total_sales != 50
+        assert s3.assigned_total_sales != 100
+        assert s4.assigned_total_sales != 250
+
+    def test_assign_new_sales_to_showrooms_when_showroom_fully_sold(self):
+        # arrange
+        sale1 = Sale(product=gen_test_product(prix=100), units_sold=1)
+        s1 = ShowRoom(refrence='sh1', assigned_total_sales=100)
+        s1.add_sale(sale1)
+        s2 = ShowRoom(refrence='sh2', assigned_total_sales=50)
+        s3 = ShowRoom(refrence='sh3', assigned_total_sales=100)
+        s4 = ShowRoom(refrence='sh4', assigned_total_sales=250)
+        all_showrooms = [s1, s2, s3, s4]
+        unsolved_showrooms = [s2, s3, s4]
+        sr = SolverRunner(inventory='')
+        
+        # act
+        _ = sr.assign_new_sale_values(unsolved_showrooms,all_showrooms)
+
+        assert round(sum([sh.assigned_total_sales for sh in all_showrooms]), 0) == 500
+             
+        # assert
+        assert s1.assigned_total_sales == 100
+        assert s2.assigned_total_sales != 50
+        assert s3.assigned_total_sales != 100
+        assert s4.assigned_total_sales != 250
+
+    def test_assign_new_sales_to_showrooms_when_showroom_is_sold_out_partially(self):
+        # arrange
+        sale1 = Sale(product=gen_test_product(prix=90), units_sold=1)
+        s1 = ShowRoom(refrence='sh1', assigned_total_sales=100)
+        s1.add_sale(sale1)
+        s2 = ShowRoom(refrence='sh2', assigned_total_sales=50)
+        s3 = ShowRoom(refrence='sh3', assigned_total_sales=100)
+        s4 = ShowRoom(refrence='sh4', assigned_total_sales=250)
+        all_showrooms = [s1, s2, s3, s4]
+        solved = [s1]
+        unsolved_showrooms = [s2, s3, s4]
+        sr = SolverRunner(inventory='')
+        
+        # act
+        _ = sr.assign_new_sale_values(unsolved_showrooms,all_showrooms)
+
+        assert round(
+            sum([sh.assigned_total_sales for sh in all_showrooms]) -
+            sum([abs(sh.assigned_total_sales - sh.calculated_total_sales)
+                  for sh in solved]),
+                0) == 500
+             
+        # assert
+        assert s1.assigned_total_sales == 100
+        assert s2.assigned_total_sales != 50
+        assert s3.assigned_total_sales != 100
+        assert s4.assigned_total_sales != 250

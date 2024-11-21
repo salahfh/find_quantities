@@ -1,6 +1,7 @@
+import random
 import itertools
 from dataclasses import dataclass
-from find_quantity.model import ShowRoom, Product, Sale, Inventory
+from find_quantity.model import ShowRoom, Product, Sale, Inventory, CannotCheckoutMoreThanStockQTException
 from find_quantity.cache import Cache
 
 import pulp
@@ -77,6 +78,8 @@ class Metrics:
     
 
 class Solver:
+    def __init__(self, products: list[Product]=None):
+        self.products = products
     
     def limit(self, showroom:ShowRoom, tolerance: float) -> int:
         return showroom.assigned_total_sales * tolerance
@@ -87,10 +90,8 @@ class Solver:
         limit = self.limit(showroom, tolerance)
         return (assigned - limit) <= calc <= (assigned + limit)
 
-    # @Cache.cached
     def calculate_quantities(self,
             showroom: ShowRoom,
-            products: tuple[Product],
             tolerance: float = 1/10*9,
             max_product_sales_percentage: float=.1
         ) -> tuple[ShowRoom, Metrics]:
@@ -116,7 +117,7 @@ class Solver:
 
         # Variables Qi?
         decision_variables = Variables()
-        for p in products:
+        for p in self.products:
             variable_name = f"q_{p.n_article}"
             variable = pulp.LpVariable(
                 variable_name, lowBound=0, upBound=p.stock_qt, cat='Integer'
@@ -167,7 +168,7 @@ class Solver:
             max_product_sales_percentage=max_product_sales_percentage,
             solved_correctly=self.is_it_solved_correctly(showroom, tolerance)
         )
-        return showroom, metrics
+        return (showroom, metrics)
 
 
 class SolverRunner:
@@ -180,24 +181,60 @@ class SolverRunner:
         self.tolerances = SOLVER_ERROR_TOLERANCE
         self.max_product = SOLVER_PRODUCT_MAX_PERCENTAGE
     
-
-    # @Cache.cached
-    @Cache.cached(include_only=lambda x: x[1].solved_correctly)
     def calc_monthly_quantities(self, sh: ShowRoom, month: int):
+        '''
+        Calculate quantity for a a given showroom after trying multiple tolerances.
+        '''
+
+        @Cache.cached(include_only_fltr=lambda x: x[1].solved_correctly)
+        def calc_func(showroom, tolerence, max_product_percentage):
+            '''
+            Function that caches the calls. It uses metrics object to filter out.
+            '''
+            sh_solved, metrics = solver.calculate_quantities(showroom=showroom,
+                tolerance=tolerence,
+                max_product_sales_percentage=max_product_percentage)
+            return sh_solved, metrics
+
         for tolerence, max_product_percentage in itertools.product(self.tolerances, self.max_product):
             print(f'\t{ month}/Params - tolerence: {tolerence}, product_percen: {max_product_percentage}')
-            solver = Solver()
-            sh_solved, metrics = solver.calculate_quantities(
-                showroom=sh,
-                products=self.inventory.get_products(),
-                tolerance=tolerence,
-                max_product_sales_percentage=max_product_percentage,
-            )
+            solver = Solver(products=self.inventory.get_products())
+            try:
+                sh_solved, metrics = calc_func(showroom=sh,
+                    tolerence=tolerence,
+                    max_product_percentage=max_product_percentage)
+            except CannotCheckoutMoreThanStockQTException:
+                print('\t Invalid Solution - Retrying without cache')
+                sh_solved, metrics = solver.calculate_quantities(showroom=sh,
+                    tolerance=tolerence,
+                    max_product_sales_percentage=max_product_percentage)
+
             if metrics.solved_correctly:
                 self.inventory.update_quantities(sales=sh_solved.sales)
                 # sh_solved.sales = self.inventory.split_products(sales=sh_solved.sales)
                 break
         return sh_solved, metrics
+    
+    def assign_new_sale_values(self,
+                               unsolved_showrooms: list[ShowRoom],
+                               all_showrooms: list[ShowRoom],
+                            ) -> list[ShowRoom]:
+        print(f'Tweaking sales of {len(unsolved_showrooms)} showrooms.')
+        solved_showroom: list[ShowRoom] = [sh for sh in all_showrooms if sh not in unsolved_showrooms]
+        total_all = sum([sh.assigned_total_sales for sh in all_showrooms])
+        total_solved = \
+            sum([sh.calculated_total_sales for sh in solved_showroom])
+        remaining_sales = total_all - total_solved
+        last_sh = unsolved_showrooms.pop()
+        for sh in unsolved_showrooms:
+            old_sale = sh.assigned_total_sales
+            random_factor = random.randint(-5, 5) * .001
+            new_sale = old_sale + random_factor * old_sale
+            sh.assigned_total_sales = round(new_sale, 2)
+            print(f'{sh.refrence} - old: {old_sale} -> new: {new_sale}')
+        last_sh.assigned_total_sales = remaining_sales - sum([sh.assigned_total_sales for sh in unsolved_showrooms])
+        unsolved_showrooms.append(last_sh)
+        return unsolved_showrooms
 
     
 

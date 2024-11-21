@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 from find_quantity.extract_csv import extract_showrooms, extract_products, extract_calculation_report
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
@@ -61,39 +62,29 @@ class CalculateQuantitiesCommand:
             path=self.input_folder / 'showrooms_transformed.csv')
 
         for month, p_list, s_list in zip(p_list_all.keys(), p_list_all.values(), s_list_all.values()):
-            unsolved_showrooms: list[ShowRoom] = list()
+            solved_showrooms: list[ShowRoom] = list()       # delete later
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
             inv = Inventory(products=products)
             sr = SolverRunner(inventory=inv)
-            for sh in showrooms:
-                print(f'Working on {sh}')
-                sh_solved, metrics = sr.calc_monthly_quantities(sh, month)
-                if metrics.solved_correctly:
-                    report.write_showrooms_report(month=month, showroom=sh_solved)
-                    report.write_metrics(month=month, metrics=metrics)
-                else:
-                    unsolved_showrooms.append(sh)
-            
-            for sh in unsolved_showrooms:
-                print(sh)
-            # total_monthly_assigned_sale = sum([sh.assigned_total_sales for sh in showrooms])
-            # total_montly_calc_sale = sum([sh.calculated_total_sales for sh in unsolved_showrooms])
-            # remaining_sale = total_monthly_assigned_sale - total_montly_calc_sale
-            # sh_global = ShowRoom(refrence='sh1_global', assigned_total_sales=remaining_sale)
-            # sh_global_solved, g_metrics = sr.calc_monthly_quantities(sh_global, month)
-            # report.write_showrooms_report(month=month, showroom=sh_global_solved)
-            # report.write_metrics(month=month, metrics=g_metrics)
+            while True:
+                unsolved_showrooms: list[ShowRoom] = list()
+                for sh in showrooms:
+                    if sh in solved_showrooms:
+                        continue
+                    print(f'Working on {sh}')
+                    sh_solved, metrics = sr.calc_monthly_quantities(sh, month)
+                    if metrics.solved_correctly:
+                        report.write_showrooms_report(month=month, showroom=sh_solved)
+                        report.write_metrics(month=month, metrics=metrics)
+                        solved_showrooms.append(sh_solved)
+                    else:
+                        unsolved_showrooms.append(sh)
+                sr.assign_new_sale_values(unsolved_showrooms=unsolved_showrooms,
+                                          all_showrooms=showrooms)
+                if len(unsolved_showrooms) <= 1:
+                    break
             break
-
-
-    # collect non optimal solutions
-    # filter out those that were solved
-    # pick the solution with lowest diff(assigned_sale and calc_sales)
-    #   Also the product must be able to cover this solution
-    # if found allocate them and recalculate the final amount to make total
-    #   monthly sales for all showrooms
-    # Run the solver again to find a quantity for the last one
 
 
 class ValidateQuantitiesCommand:
