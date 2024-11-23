@@ -5,7 +5,7 @@ from find_quantity.transformer_csv import ProductTransformer, ShowroomTransforme
 from find_quantity.model import Inventory, ShowRoom
 from find_quantity.report import Report
 from find_quantity.data_quality_control import product_validation, validate_calculated_products, validate_extracted_product_raw_data
-from find_quantity.solver import SolverRunner
+from find_quantity.solver import SolverRunner, Solver
 
 
 DataLoader = ''
@@ -60,31 +60,20 @@ class CalculateQuantitiesCommand:
             path=self.input_folder / 'products_transformed.csv')
         s_list_all = extract_showrooms(
             path=self.input_folder / 'showrooms_transformed.csv')
-
         for month, p_list, s_list in zip(p_list_all.keys(), p_list_all.values(), s_list_all.values()):
-            solved_showrooms: list[ShowRoom] = list()       # delete later
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
+            showroom = ShowRoom(
+                    refrence=f'Showroom_{month}',
+                    assigned_total_sales=sum([sh.assigned_total_sales for sh in showrooms])
+                )
+
+            print(f'Working on {showroom}')
             inv = Inventory(products=products)
-            sr = SolverRunner(inventory=inv)
-            while True:
-                unsolved_showrooms: list[ShowRoom] = list()
-                for sh in showrooms:
-                    if sh in solved_showrooms:
-                        continue
-                    print(f'Working on {sh}')
-                    sh_solved, metrics = sr.calc_monthly_quantities(sh, month)
-                    if metrics.solved_correctly:
-                        report.write_showrooms_report(month=month, showroom=sh_solved)
-                        report.write_metrics(month=month, metrics=metrics)
-                        solved_showrooms.append(sh_solved)
-                    else:
-                        unsolved_showrooms.append(sh)
-                sr.assign_new_sale_values(unsolved_showrooms=unsolved_showrooms,
-                                          all_showrooms=showrooms)
-                if len(unsolved_showrooms) <= 1:
-                    break
-            break
+            s = Solver(products=[])
+            s.manually_find_closests_match(inventory=inv, showroom=showroom)
+            report.write_showrooms_report(month=month, showroom=showroom)
+            report.write_product_transformed(products=inv.get_products(), month=month, filename_prefix='_after_run')
 
 
 class ValidateQuantitiesCommand:

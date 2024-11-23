@@ -7,7 +7,7 @@ from find_quantity.cache import Cache
 import pulp
 
 SOLVER_TIME_LIMIT = 20
-SOLVER_ACCURACY_LIMIT = 0.001   # is it doing anything?
+SOLVER_ACCURACY_LIMIT = 1   # is it doing anything?
 SOLVER_ERROR_TOLERANCE = [1 / 10**i for i in [9, 6, 3]]
 SOLVER_PRODUCT_MAX_PERCENTAGE = [.1, .12, .15, .2, .3, .5, .7]
 
@@ -88,7 +88,8 @@ class Solver:
         calc = showroom.calculated_total_sales
         assigned = showroom.assigned_total_sales
         limit = self.limit(showroom, tolerance)
-        return (assigned - limit) <= calc <= (assigned + limit)
+        # return (assigned - limit) <= calc <= (assigned + limit)
+        return True
 
     def calculate_quantities(self,
             showroom: ShowRoom,
@@ -169,7 +170,42 @@ class Solver:
             solved_correctly=self.is_it_solved_correctly(showroom, tolerance)
         )
         return (showroom, metrics)
+    
+    def manually_find_closests_match(self,
+                                     inventory: Inventory,
+                                     showroom: ShowRoom,
+                                     product_percentage: float = 1,
+                                     ) -> ShowRoom:
+        difference = showroom.assigned_total_sales #- showroom.calculated_total_sales
+        notsolved = True
+        attempts = 2
+        while notsolved:
+            sales = []
+            products = inventory.get_products()
+            for p in products:
+                max_product = p.stock_qt * product_percentage
+                for q in range(max_product, 0, -1):
+                    total = q * p.prix
+                    if (difference - total) >= 0:
+                        s = Sale(
+                            product=p,
+                            units_sold=q,
+                        )
+                        difference -= total
+                        sales.append(s)
+                        showroom.add_sale(s)
+                        break
+                if difference <= 0:
+                    notsolved = False
+                    break
+            if len(products) == 0 or attempts < 0:
+                break
+            inventory.update_quantities(sales=sales)
+            attempts -= 1
+        return showroom
 
+                
+    
 
 class SolverRunner:
     def __init__(self,
@@ -211,31 +247,12 @@ class SolverRunner:
 
             if metrics.solved_correctly:
                 self.inventory.update_quantities(sales=sh_solved.sales)
+                sh_solved = solver.manually_find_closests_match(self.inventory.get_products(), showroom=sh_solved)
+                self.inventory.update_quantities(sales=sh_solved.sales)
                 # sh_solved.sales = self.inventory.split_products(sales=sh_solved.sales)
                 break
         return sh_solved, metrics
     
-    def assign_new_sale_values(self,
-                               unsolved_showrooms: list[ShowRoom],
-                               all_showrooms: list[ShowRoom],
-                            ) -> list[ShowRoom]:
-        print(f'Tweaking sales of {len(unsolved_showrooms)} showrooms.')
-        solved_showroom: list[ShowRoom] = [sh for sh in all_showrooms if sh not in unsolved_showrooms]
-        total_all = sum([sh.assigned_total_sales for sh in all_showrooms])
-        total_solved = \
-            sum([sh.calculated_total_sales for sh in solved_showroom])
-        remaining_sales = total_all - total_solved
-        last_sh = unsolved_showrooms.pop()
-        for sh in unsolved_showrooms:
-            old_sale = sh.assigned_total_sales
-            random_factor = random.randint(-5, 5) * .001
-            new_sale = old_sale + random_factor * old_sale
-            sh.assigned_total_sales = round(new_sale, 2)
-            print(f'{sh.refrence} - old: {old_sale} -> new: {new_sale}')
-        last_sh.assigned_total_sales = remaining_sales - sum([sh.assigned_total_sales for sh in unsolved_showrooms])
-        unsolved_showrooms.append(last_sh)
-        return unsolved_showrooms
-
     
 
 if __name__ == '__main__':

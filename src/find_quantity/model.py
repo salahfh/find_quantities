@@ -118,7 +118,7 @@ class Inventory:
         for s in sales:
             for p in self.products:
                 if s.product == p:
-                    if p.stock_qt - s.units_sold < 0:
+                    if (p.stock_qt - s.units_sold) < 0:
                         raise CannotCheckoutMoreThanStockQTException(
                             f'{p}:cannot take {s.units_sold} out of {p.stock_qt}')
                     p.stock_qt -= s.units_sold
