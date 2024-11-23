@@ -175,15 +175,16 @@ class Solver:
                                      inventory: Inventory,
                                      showroom: ShowRoom,
                                      product_percentage: float = 1,
+                                     attempts: int = 2
                                      ) -> ShowRoom:
         difference = showroom.assigned_total_sales #- showroom.calculated_total_sales
         notsolved = True
-        attempts = 2
         while notsolved:
             sales = []
             products = inventory.get_products()
+            product_percentage += .01
             for p in products:
-                max_product = p.stock_qt * product_percentage
+                max_product = min(int(p.stock_qt * product_percentage * 100), p.stock_qt)
                 for q in range(max_product, 0, -1):
                     total = q * p.prix
                     if (difference - total) >= 0:
