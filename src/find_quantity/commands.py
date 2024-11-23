@@ -87,7 +87,6 @@ class CalculateQuantitiesCommand:
                 report.write_metrics(metrics=Metrics(showroom=sh), month=month)
             report.write_product_transformed(products=inv.get_products(), month=month)
             print()
-        print('\nFinished')
 
 
 class ValidateQuantitiesCommand:
