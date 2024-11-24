@@ -3,8 +3,8 @@ from find_quantity.commands import CalculateQuantitiesCommand, ProcessFilesComma
 
 if __name__ == '__main__':
     try:
-        # c = ProcessFilesCommand().execute()
-        c = CalculateQuantitiesCommand().excute()
-        c = ValidateQuantitiesCommand().excute()
+        c = ProcessFilesCommand().execute()
+        c = CalculateQuantitiesCommand().execute()
+        c = ValidateQuantitiesCommand().execute()
     except KeyboardInterrupt:
         print('Bye!')

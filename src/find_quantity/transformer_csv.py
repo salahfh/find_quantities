@@ -1,5 +1,6 @@
+import copy
 from collections import defaultdict
-from find_quantity.model import Product, ShowRoom, MergedProduct
+from find_quantity.model import Product, ShowRoom, MergedProduct, Sale
 
 
 
@@ -21,17 +22,17 @@ class MergeSplitProductsMixin:
         self.products = products
         self.merged_products = None
 
-    def _get_product_stem(self, code: str, prefixes: list[str]) -> str | None:
-        code.replace(' ', '').strip()
-        if any(code.endswith(postfix) for postfix in prefixes):
-            return code[:-2]
+    def _find_product_stem(self, n_article: str, prefix: list[str]) -> str|None:
+        n_article = n_article.replace(' ', '').strip()
+        if any(n_article.endswith(pfix) for pfix in prefix):
+            return n_article[:-2]
         return None
 
     def merge_indoor_outdoor_units(self):
         split_products: dict[str, list[Product]] = defaultdict(list)
         for product in self.products:
-            code = self._get_product_stem(
-                code=product.n_article, prefixes=['-I', '-O'])
+            code = self._find_product_stem(
+                n_article=product.n_article, prefix=['-I', '-O'])
             if code:
                 split_products[code].append(product)
             else:
@@ -69,11 +70,35 @@ class MergeSplitProductsMixin:
         self.products = cleaned_products
         self.merged_products = merged_products
 
-    def split_merged_products(self,
-                              all_products: list[Product],
-                              products: list[Product],
-                              ) -> list[Product]:
-        pass
+    def split_product(self, sales: list[Sale], all_products:list[Product]) -> list[Product]:
+        '''
+        Split combined products -C and return three sales for each with unit sold reset to 0
+        for the -C sale and units allocated to the others.
+        '''
+        new_sales: list[Sale] = []
+        for s in sales:
+            code = self._find_product_stem(s.product.n_article, prefix=['-C'])
+            if code: 
+                for p_inv in all_products:
+                    code_inv = self._find_product_stem(p_inv.n_article, prefix=['-O', '-I'])
+                    if code == code_inv:
+                        p = copy.copy(p_inv)
+                        # p.stock_qt += s.product.stock_qt
+                        p.stock_qt = s.product.stock_qt
+                        new_sales.append(Sale(
+                            product=p,
+                            units_sold=s.units_sold
+                        ))
+                s.units_sold = 0
+
+        # Merge it with exisiting sales if they exist
+        for sn in new_sales:
+            for s in sales:
+                if s.product == sn.product:
+                    s.product.stock_qt += sn.product.stock_qt
+                    s.units_sold += sn.units_sold
+                    sn.units_sold = 0
+        return sales + new_sales
     
     def get_merged_products(self) -> list[MergedProduct]:
         return self.merged_products

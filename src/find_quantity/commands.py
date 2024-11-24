@@ -54,7 +54,7 @@ class CalculateQuantitiesCommand:
         self.input_folder = STEP_ONE_TRANSFORM_PATH
         self.output_folder = STEP_TWO_CALCULATE_PATH
 
-    def excute(self):
+    def execute(self):
         report = Report(output_folder=self.output_folder)
         p_list_all = extract_products(path=self.input_folder / 'products_transformed.csv')
         s_list_all = extract_showrooms(path=self.input_folder / 'showrooms_transformed.csv')
@@ -64,6 +64,8 @@ class CalculateQuantitiesCommand:
             inv = Inventory(products=products)
             solver = Solver()
 
+            # Global showroom
+            # -----
             monthly_showroom = ShowRoom(
                     refrence=f'All_Month_{month}',
                     assigned_total_sales=sum([sh.assigned_total_sales for sh in showrooms])
@@ -71,8 +73,10 @@ class CalculateQuantitiesCommand:
 
             print(f'Working on {monthly_showroom}', end='  ')
             solver.manually_find_closests_match(inventory=inv, showroom=monthly_showroom)
+            report.write_product_transformed(products=inv.get_products(), month=month, filename_prefix='_global')
 
-            # Create new products from the sales
+            # Single Showroom
+            # -----
             products = list()
             for s in monthly_showroom.sales:
                 p = copy(s.product)
@@ -89,16 +93,34 @@ class CalculateQuantitiesCommand:
             print()
 
 
+class SplitCombinedProductsCommand:
+    def execute(self):
+        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
+        raw_products = extract_products(RAW_PRODUCTS_DATA)
+
+        calculation_report = extract_calculation_report(
+            path=STEP_TWO_CALCULATE_PATH / 'showrooms_calculation_report.csv'
+        )
+        for month, showrooms, raw_month_products in\
+            zip(calculation_report.keys(), calculation_report.values(), raw_products.values()):
+            p_transfomer = ProductTransformer(products=raw_month_products)
+            p_list = p_transfomer.load()
+            for sh in showrooms.values():
+                sh.sales = p_transfomer.split_product(sales=sh.sales, all_products=p_list)
+                #pass them trhough inventory for merging
+                report.write_showrooms_report(month=month, showroom=sh, filename_prefix='_split')
+
+
 class ValidateQuantitiesCommand:
     def __init__(self):
         pass
 
-    def excute(self):
+    def execute(self):
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
         raw_products = extract_products(RAW_PRODUCTS_DATA)
         # raw_showrooms = extract_showrooms(RAW_PRODUCTS_DATA)
         calculation_report = extract_calculation_report(
-            path=STEP_TWO_CALCULATE_PATH / 'showrooms_calculation_report.csv'
+            path=STEP_THREE_VALIDATE_PATH / 'showrooms_calculation_report__split.csv'
         )
         validation_data_product_calc = validate_calculated_products(calculation_report)
         simplied_product_raw_data = validate_extracted_product_raw_data(raw_products)
@@ -116,4 +138,6 @@ class FinalFormatingCommand:
 
 
 if __name__ == '__main__':
-    c = ValidateQuantitiesCommand().excute()
+    # c = SplitCombinedProductsCommand().excute()
+    # c = ValidateQuantitiesCommand().excute()
+    c = CalculateQuantitiesCommand().execute()

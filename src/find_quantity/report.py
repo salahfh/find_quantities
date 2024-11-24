@@ -105,21 +105,21 @@ class Report:
     @IOTools.to_csv(mode='w')
     def valid_product_quantity_report(self, validation_data: list[ValidateProductQuantity]) -> None:
         path = self.output_folder / 'product_quantity_validation.csv'
-        header = ['mois', 'product_name', 
-                  'calc_remaining_stock', 'calc_all_units_sold', 'calc_stock_initial', 
-                #   'calc_stock_initial_min',
-                  'calc_stock_diff', 'calculation_correct?',
-                  'raw_data_stock_initial', 'was_raw_data_read_correct?']
+        header = ['mois',
+                  'Product_name', 
+                  'Remaining_stock',
+                  'Units_sold',
+                  'Raw_data_stock_initial',
+                  'Stock_diff', 
+                  'Calculation_correct?',
+                 ]
         data = [(
                 v.month,
                 v.product_name,
                 v.calc_stock_qt,
                 v.calc_all_units_sold,
-                v.calc_stock_qt_initial,
-                # v.calc_stock_qt_initial_min,
                 v.calc_stock_diff,
-                v.is_calc_correct,
                 v.raw_data_stock_initial,
-                v.was_raw_data_read_correctly,
+                v.is_calc_correct,
             ) for v in validation_data]
         return path, header, data

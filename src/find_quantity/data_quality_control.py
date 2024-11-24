@@ -12,20 +12,15 @@ class ValidateProductQuantity:
     calc_stock_qt: int
     calc_stock_qt_initial: int
     calc_all_units_sold: int
-    # calc_stock_qt_initial_min: int
     raw_data_stock_initial: int = 0
 
     @property
     def calc_stock_diff(self) -> int:
-        return self.calc_stock_qt_initial - (self.calc_stock_qt + self.calc_all_units_sold)
+        return self.raw_data_stock_initial - (self.calc_stock_qt + self.calc_all_units_sold)
 
     @property
     def is_calc_correct(self) -> bool:
         return self.calc_stock_diff == 0
-
-    @property
-    def was_raw_data_read_correctly(self) -> bool:
-        return self.raw_data_stock_initial == self.calc_stock_qt_initial
 
 
 @dataclass
