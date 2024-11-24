@@ -35,7 +35,7 @@ def extract_showrooms(data:list[dict], path: Path=WORKING_DIR / 'showrooms.csv')
 
 
 @IOTools.from_csv()
-def extract_calculation_report(data:list[dict], path: Path) -> dict[Month, dict[ShowRoom]]:
+def extract_calculation_report(data:list[dict], path: Path) -> dict[Month, dict[str, ShowRoom]]:
     values = defaultdict(dict[str, ShowRoom])
     for row in data:
         sh = ShowRoom(

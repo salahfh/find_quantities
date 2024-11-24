@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from find_quantity.model import ShowRoom, Sale, Inventory
+from find_quantity.model import ShowRoom, Sale, Inventory, Product
 
 
 
@@ -35,7 +35,7 @@ class Solver:
                                      inventory: Inventory,
                                      showroom: ShowRoom,
                                      product_percentage: float = 1,
-                                     attempts: int = 2
+                                     attempts: int = 2,
                                      ) -> ShowRoom:
         difference = showroom.assigned_total_sales 
         notsolved = True
@@ -44,8 +44,7 @@ class Solver:
             products = inventory.get_products()
             product_percentage += .001
             for p in products:
-                max_product = int(p.stock_qt * product_percentage)
-                max_product = min(p.stock_qt, max_product) if max_product > 0 else p.stock_qt
+                max_product = self.determine_max_product(product_percentage, p)
                 for q in range(max_product, 0, -1):
                     total = q * p.prix
                     if (difference - total) >= 0:
@@ -64,6 +63,20 @@ class Solver:
                 break
             inventory.update_quantities(sales=sales)
             attempts -= 1
+
+    def determine_max_product(self, product_percentage: float, p: Product):
+        max_product = int(p.stock_qt * product_percentage)
+        max_product = min(p.stock_qt, max_product) if max_product > 0 else p.stock_qt
+        return max_product
+    
+    def allocate_remaining_products(self, inventory: Inventory, showroom: ShowRoom) -> ShowRoom:
+        products = inventory.get_products()
+        sales = []
+        for p in products:
+            s = Sale(product=p, units_sold=p.stock_qt)
+            showroom.add_sale(s)
+            sales.append(s)
+        inventory.update_quantities(sales=sales)
         return showroom
 
 
