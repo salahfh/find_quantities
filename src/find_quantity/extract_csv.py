@@ -40,7 +40,7 @@ def extract_calculation_report(data:list[dict], path: Path) -> dict[Month, dict[
     for row in data:
         sh = ShowRoom(
             refrence=row['Showroom'],
-            assigned_total_sales=row['Assigned Sales'],
+            assigned_total_sales=float(row['Assigned Sales']),
         )
         values[row['mois']][row['Showroom']] = sh
     

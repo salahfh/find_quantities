@@ -70,10 +70,34 @@ class Sale:
 
 
 @dataclass
+class DailySale:
+    day: int
+    sales: list[Sale]
+
+    @property
+    def sale_total_amount(self) -> float:
+        return sum([s.sale_total_amount for s in self.sales])
+
+    @property
+    def total_units_sold(self) -> float:
+        return sum([s.units_sold for s in self.sales])
+
+    def __repr__(self):
+        return f'DailySale {self.day} (Sold: {self.sale_total_amount} DZD | {self.total_units_sold} Units)'
+    
+    def add_sales(self, sales: list[Sale]) -> None:
+        for s in sales:
+            self.sales.append(s)
+
+
+
+
+@dataclass
 class ShowRoom:
     refrence: str
     assigned_total_sales: float
     sales: list[Sale] = field(default_factory=list)
+    daily_sales: list[DailySale] = field(default_factory=list)
 
     def __str__(self):
         return f"Showroom {self.refrence} ({self.assigned_total_sales} DZD)"
@@ -91,6 +115,18 @@ class ShowRoom:
 
     def add_sale(self, sale: Sale) -> None:
         self.sales.append(sale)
+
+    def add_sales(self, sales: list[Sale]) -> None:
+        for s in sales:
+            self.add_sale(s)
+    
+    def add_daily_sales(self, day: int, sales: list[Sale]) -> None:
+        self.daily_sales.append(
+            DailySale(
+                day=day,
+                sales=sales
+            )
+        )
 
     @property
     def calculated_total_sales(self) -> bool:
@@ -135,6 +171,15 @@ class Inventory:
         if all:
             return self.products
         return tuple(p for p in self.products if p.stock_qt > 0)
+    
+    def add_products_from_sales(self, sales: list[Sale]) -> None:
+        products = list()
+        for s in sales:
+            p = copy.copy(s.product)
+            p.stock_qt = s.units_sold
+            products.append(p)
+        self.products = self._add_products(products=products)
+
 
 
 def gen_test_product(

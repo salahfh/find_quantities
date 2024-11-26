@@ -123,3 +123,29 @@ class Report:
                 v.is_calc_correct,
             ) for v in validation_data]
         return path, header, data
+
+    @IOTools.to_csv(mode='a')
+    def write_daily_sales(self, month: int, showroom: ShowRoom) -> None:
+        path = self.output_folder / 'daily_sales.csv'
+        header = ['mois',
+                  'showroom', 
+                  'day',
+                  'n_article',
+                  'designation',
+                  'groupe_code', 
+                  'prix', 
+                  'Units_sold',
+                  'Total',
+                 ]
+        data = [(
+                month,
+                showroom.refrence,
+                d.day,
+                s.product.n_article,
+                s.product.designation,
+                s.product.groupe_code,
+                s.product.prix,
+                s.units_sold,
+                s.sale_total_amount
+            ) for d in showroom.daily_sales for s in d.sales if s.units_sold]
+        return path, header, data

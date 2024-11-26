@@ -1,4 +1,3 @@
-from copy import copy
 from pathlib import Path
 from find_quantity.extract_csv import extract_showrooms, extract_products, extract_calculation_report
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
@@ -65,38 +64,29 @@ class CalculateQuantitiesCommand:
             solver = Solver()
             
             # Filter showrooms with zero sales
-            showrooms = [sh for sh in showrooms if sh.assigned_total_sales > 0]
+            showrooms = [sh for sh in showrooms if sh.assigned_total_sales]
 
             # Global showroom
-            # -----
             monthly_showroom = ShowRoom(
                     refrence=f'All_Month_{month}',
                     assigned_total_sales=sum([sh.assigned_total_sales for sh in showrooms])
                 )
-
             print(f'Working on {monthly_showroom}', end='  ')
-            solver.manually_find_closests_match(inventory=inv, showroom=monthly_showroom)
+            monthly_showroom.add_sales(solver.distribute_products_monthly(inventory=inv,
+                                                                         target_amount=monthly_showroom.assigned_total_sales))
             report.write_product_transformed(products=inv.get_products(), month=month, filename_prefix='_remaining')
 
-            # Single Showrooms
-            # Recreate new products list
-            # -----
-            products = list()
-            for s in monthly_showroom.sales:
-                p = copy(s.product)
-                p.stock_qt = s.units_sold
-                products.append(p)
-
-            inv = Inventory(products=products)
+            # Single Showrooms - Recreate new products list
+            inv = Inventory(products=[])
+            inv.add_products_from_sales(monthly_showroom.sales)
             last_showroom = showrooms[-1]
             for sh in showrooms:
                 print('.', end='')
-                solver.manually_find_closests_match(inventory=inv,
-                                                    showroom=sh,
-                                                    product_percentage=.1,
-                                                    attempts=100)
+                sh.add_sales(solver.distribute_products_by_showroom(inventory=inv,
+                                                    target_amount=sh.assigned_total_sales
+                ))
                 if sh is last_showroom:
-                    solver.allocate_remaining_products(inventory=inv, showroom=last_showroom)
+                    sh.add_sales(solver.allocate_remaining_products(inventory=inv))
                 report.write_showrooms_report(month=month, showroom=sh)
                 report.write_metrics(metrics=Metrics(showroom=sh), month=month)
             print()
@@ -104,21 +94,27 @@ class CalculateQuantitiesCommand:
 
 class DevideProductTo26Days:
     def execute(self):
-        calculation_report = extract_calculation_report(
+        DAYS = 26
+        solver = Solver()
+        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
+        calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
             path=STEP_TWO_CALCULATE_PATH / 'showrooms_calculation_report.csv'
         )
         for month, showrooms in calculation_report.items():
+            print(f'Daily Product Distribution {month}', end='\t')
             for sh in showrooms.values():
-                # days
-                pass
-        # print(calculation_report)
-        # read the calculation file
-        # go each showroom
-        # construct product from sales
-        # split total over 26 days 
-        # write reports
-        pass
-
+                print('.', end='')
+                inv = Inventory(products=[])
+                inv.add_products_from_sales(sh.sales)
+                daily_sales = solver.distrubute_remaining_products(inv, DAYS)
+                for day, sales in zip(range(1, DAYS+1), daily_sales):
+                    sh.add_daily_sales(
+                        day=day,
+                        sales=sales
+                    )
+                report.write_daily_sales(month=month, showroom=sh)
+            print()
+                
 
 class SplitCombinedProductsCommand:
     def execute(self):
@@ -134,7 +130,6 @@ class SplitCombinedProductsCommand:
             p_list = p_transfomer.load()
             for sh in showrooms.values():
                 sh.sales = p_transfomer.split_product(sales=sh.sales, all_products=p_list)
-                #pass them trhough inventory for merging
                 report.write_showrooms_report(month=month, showroom=sh, filename_prefix='_split')
 
 
@@ -145,7 +140,6 @@ class ValidateQuantitiesCommand:
     def execute(self):
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
         raw_products = extract_products(RAW_PRODUCTS_DATA)
-        # raw_showrooms = extract_showrooms(RAW_PRODUCTS_DATA)
         calculation_report = extract_calculation_report(
             path=STEP_THREE_VALIDATE_PATH / 'showrooms_calculation_report__split.csv'
         )
