@@ -1,8 +1,7 @@
-from typing import NewType
-import logging
 import copy
+import logging
 from dataclasses import dataclass, field
-
+from typing import NewType
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class CannotCheckoutMoreThanStockQTException(Exception):
     """When trying to add the same product more than once, it'll alert you."""
 
 
-Month =  NewType('Month', int)
+Month = NewType("Month", int)
 
 
 @dataclass()
@@ -40,7 +39,7 @@ class Product:
 
     def __eq__(self, value):
         if not isinstance(value, Product):
-            raise TypeError(f'{type(value)} not supported')
+            raise TypeError(f"{type(value)} not supported")
         return self.n_article == value.n_article
 
     def __hash__(self):
@@ -57,16 +56,17 @@ class MergedProduct:
 
 @dataclass
 class Sale:
-    '''Class to hold final data returned after calculating the quantities.'''
+    """Class to hold final data returned after calculating the quantities."""
+
     product: Product
     units_sold: int = 0
 
     @property
     def sale_total_amount(self):
         return self.product.prix * self.units_sold
-    
+
     def __repr__(self):
-        return f'Sale {self.product.n_article} (Sold: {self.units_sold})'
+        return f"Sale {self.product.n_article} (Sold: {self.units_sold})"
 
 
 @dataclass
@@ -83,13 +83,11 @@ class DailySale:
         return sum([s.units_sold for s in self.sales])
 
     def __repr__(self):
-        return f'DailySale {self.day} (Sold: {self.sale_total_amount} DZD | {self.total_units_sold} Units)'
-    
+        return f"DailySale {self.day} (Sold: {self.sale_total_amount} DZD | {self.total_units_sold} Units)"
+
     def add_sales(self, sales: list[Sale]) -> None:
         for s in sales:
             self.sales.append(s)
-
-
 
 
 @dataclass
@@ -107,7 +105,7 @@ class ShowRoom:
 
     def __eq__(self, value):
         if not isinstance(value, ShowRoom):
-            raise TypeError(f'{type(value)} not supported')
+            raise TypeError(f"{type(value)} not supported")
         return self.refrence == value.refrence
 
     def __hash__(self):
@@ -119,14 +117,9 @@ class ShowRoom:
     def add_sales(self, sales: list[Sale]) -> None:
         for s in sales:
             self.add_sale(s)
-    
+
     def add_daily_sales(self, day: int, sales: list[Sale]) -> None:
-        self.daily_sales.append(
-            DailySale(
-                day=day,
-                sales=sales
-            )
-        )
+        self.daily_sales.append(DailySale(day=day, sales=sales))
 
     @property
     def calculated_total_sales(self) -> bool:
@@ -156,10 +149,11 @@ class Inventory:
                 if s.product == p:
                     if (p.stock_qt - s.units_sold) < 0:
                         raise CannotCheckoutMoreThanStockQTException(
-                            f'{p}:cannot take {s.units_sold} out of {p.stock_qt}')
+                            f"{p}:cannot take {s.units_sold} out of {p.stock_qt}"
+                        )
                     p.stock_qt -= s.units_sold
                     break
-    
+
     def _handle_returned_items(self):
         for p in self.products:
             if p.stock_qt < 0:
@@ -167,11 +161,11 @@ class Inventory:
                 p.prix = -1 * p.prix
                 p.stock_qt = -1 * p.stock_qt
 
-    def get_products(self, all: bool=False) -> list[Product]:
+    def get_products(self, all: bool = False) -> list[Product]:
         if all:
             return self.products
         return tuple(p for p in self.products if p.stock_qt > 0)
-    
+
     def add_products_from_sales(self, sales: list[Sale]) -> None:
         products = list()
         for s in sales:
@@ -181,18 +175,17 @@ class Inventory:
         self.products = self._add_products(products=products)
 
 
-
 def gen_test_product(
-        n_article: str = 'test',
-        designation='test designation',
-        stock_qt: int = 10,
-        prix: float = 10,
-        returned: bool = False
+    n_article: str = "test",
+    designation="test designation",
+    stock_qt: int = 10,
+    prix: float = 10,
+    returned: bool = False,
 ):
     return Product(
         n_article=n_article,
         designation=designation,
-        groupe_code='',
+        groupe_code="",
         stock_qt=stock_qt,
         prix=prix,
         returned=returned,

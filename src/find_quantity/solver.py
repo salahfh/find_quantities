@@ -1,9 +1,9 @@
 import random
 from collections import defaultdict
-from functools import partialmethod
 from dataclasses import dataclass
-from find_quantity.model import ShowRoom, Sale, Inventory, Product
+from functools import partialmethod
 
+from find_quantity.model import Inventory, Product, Sale, ShowRoom
 
 
 @dataclass
@@ -31,22 +31,23 @@ class Metrics:
     @property
     def num_products_used(self) -> int:
         return len(set([s.product for s in self.showroom.sales if s.units_sold > 0]))
-    
+
 
 class Solver:
-    def distrubute_maximum_of_all_products(self,
-                                     inventory: Inventory,
-                                     target_amount: float,
-                                     product_percentage: float = 1,
-                                     attempts: int = 2,
-                                     ) -> list[Sale]:
+    def distrubute_maximum_of_all_products(
+        self,
+        inventory: Inventory,
+        target_amount: float,
+        product_percentage: float = 1,
+        attempts: int = 2,
+    ) -> list[Sale]:
         difference = target_amount
         notsolved = True
         all_sales = []
         while notsolved:
             sales = []
             products = inventory.get_products()
-            product_percentage += .001
+            product_percentage += 0.001
             for p in products:
                 max_product = self.determine_max_product(product_percentage, p)
                 for q in range(max_product, 0, -1):
@@ -65,21 +66,18 @@ class Solver:
             attempts -= 1
             all_sales += sales
         return all_sales
-    
-    distribute_products_by_showroom = partialmethod(
-        distrubute_maximum_of_all_products,
-        product_percentage=.1,
-        attempts=100)
 
-    distribute_products_monthly = partialmethod(
-        distrubute_maximum_of_all_products
+    distribute_products_by_showroom = partialmethod(
+        distrubute_maximum_of_all_products, product_percentage=0.1, attempts=100
     )
-    
+
+    distribute_products_monthly = partialmethod(distrubute_maximum_of_all_products)
+
     def determine_max_product(self, product_percentage: float, p: Product):
         max_product = int(p.stock_qt * product_percentage)
         max_product = min(p.stock_qt, max_product) if max_product > 0 else p.stock_qt
         return max_product
-    
+
     def allocate_remaining_products(self, inventory: Inventory) -> list[Sale]:
         products = inventory.get_products()
         sales = []
@@ -88,34 +86,32 @@ class Solver:
             sales.append(s)
         inventory.update_quantities(sales=sales)
         return sales
-    
+
     def generate_daily_qt(self, n: int, summ: int) -> list[int]:
         q, r = divmod(summ, n)
         qt = [q for _ in range(n)]
         for i in range(len(qt)):
             r -= 1
-            if r < 0: 
+            if r < 0:
                 break
             qt[i] += 1
         random.shuffle(qt)
         return qt
-    
-    def distrubute_remaining_products(self, inventory: Inventory, n: int) -> list[list[Sale]]:
+
+    def distrubute_remaining_products(
+        self, inventory: Inventory, n: int
+    ) -> list[list[Sale]]:
         products = inventory.get_products()
         sales = defaultdict(list)
         for p in products:
-            sl = [Sale(product=p, units_sold=q) for q in
-                self.generate_daily_qt(n=n, summ=p.stock_qt)] 
+            sl = [
+                Sale(product=p, units_sold=q)
+                for q in self.generate_daily_qt(n=n, summ=p.stock_qt)
+            ]
             [sales[i].append(s) for i, s in enumerate(sl)]
-            inventory.update_quantities(sales=[
-                Sale(
-                    product=p,
-                    units_sold=p.stock_qt
-                )
-            ])
+            inventory.update_quantities(sales=[Sale(product=p, units_sold=p.stock_qt)])
         return sales.values()
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

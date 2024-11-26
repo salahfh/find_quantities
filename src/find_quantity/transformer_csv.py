@@ -1,7 +1,7 @@
 import copy
 from collections import defaultdict
-from find_quantity.model import Product, ShowRoom, MergedProduct, Sale
 
+from find_quantity.model import MergedProduct, Product, Sale, ShowRoom
 
 
 class ProductDuplicatedException(Exception):
@@ -13,17 +13,17 @@ class ProductAreAlreadySplit(Exception):
 
 
 class MergeSplitProductsMixin:
-    '''
-    Some products such AC come in two items Ext and Int. 
+    """
+    Some products such AC come in two items Ext and Int.
     This function helps merge them and the split them later.
-    '''
+    """
 
     def __init__(self, products: list[Product]):
         self.products = products
         self.merged_products = None
 
-    def _find_product_stem(self, n_article: str, prefix: list[str]) -> str|None:
-        n_article = n_article.replace(' ', '').strip()
+    def _find_product_stem(self, n_article: str, prefix: list[str]) -> str | None:
+        n_article = n_article.replace(" ", "").strip()
         if any(n_article.endswith(pfix) for pfix in prefix):
             return n_article[:-2]
         return None
@@ -32,27 +32,27 @@ class MergeSplitProductsMixin:
         split_products: dict[str, list[Product]] = defaultdict(list)
         for product in self.products:
             code = self._find_product_stem(
-                n_article=product.n_article, prefix=['-I', '-O'])
+                n_article=product.n_article, prefix=["-I", "-O"]
+            )
             if code:
                 split_products[code].append(product)
             else:
-                split_products['others'].append(product)
+                split_products["others"].append(product)
 
         merged_products: list[MergedProduct] = []
         cleaned_products: list[Product] = []
         for stem, products in split_products.items():
-            if stem == 'others' or \
-               len(products) == 1:
+            if stem == "others" or len(products) == 1:
                 cleaned_products += products
             elif len(products) > 2:
-                raise ProductDuplicatedException('Duplicated Values')
+                raise ProductDuplicatedException("Duplicated Values")
             else:
                 p1, p2 = products
                 shared_stock = min(p1.stock_qt, p2.stock_qt)
                 shared_price = abs(p1.prix + p2.prix)
                 p3 = Product(
-                    n_article=f'{stem}-C',
-                    designation=f'{p1.designation} - Combined',
+                    n_article=f"{stem}-C",
+                    designation=f"{p1.designation} - Combined",
                     groupe_code=p1.groupe_code,
                     prix=shared_price,
                     stock_qt=shared_stock,
@@ -61,34 +61,37 @@ class MergeSplitProductsMixin:
                 p2.stock_qt = abs(shared_stock - p2.stock_qt)
                 cleaned_products += [p1, p2, p3]
 
-                merged_products.append(MergedProduct(
-                    code=stem,
-                    p_C=p3,
-                    p_O=p2,
-                    p_I=p1,
-                ))
+                merged_products.append(
+                    MergedProduct(
+                        code=stem,
+                        p_C=p3,
+                        p_O=p2,
+                        p_I=p1,
+                    )
+                )
         self.products = cleaned_products
         self.merged_products = merged_products
 
-    def split_product(self, sales: list[Sale], all_products:list[Product]) -> list[Product]:
-        '''
+    def split_product(
+        self, sales: list[Sale], all_products: list[Product]
+    ) -> list[Product]:
+        """
         Split combined products -C and return three sales for each with unit sold reset to 0
         for the -C sale and units allocated to the others.
-        '''
+        """
         new_sales: list[Sale] = []
         for s in sales:
-            code = self._find_product_stem(s.product.n_article, prefix=['-C'])
-            if code: 
+            code = self._find_product_stem(s.product.n_article, prefix=["-C"])
+            if code:
                 for p_inv in all_products:
-                    code_inv = self._find_product_stem(p_inv.n_article, prefix=['-O', '-I'])
+                    code_inv = self._find_product_stem(
+                        p_inv.n_article, prefix=["-O", "-I"]
+                    )
                     if code == code_inv:
                         p = copy.copy(p_inv)
                         # p.stock_qt += s.product.stock_qt
                         p.stock_qt = s.product.stock_qt
-                        new_sales.append(Sale(
-                            product=p,
-                            units_sold=s.units_sold
-                        ))
+                        new_sales.append(Sale(product=p, units_sold=s.units_sold))
                 s.units_sold = 0
 
         # Merge it with exisiting sales if they exist
@@ -99,16 +102,16 @@ class MergeSplitProductsMixin:
                     s.units_sold += sn.units_sold
                     sn.units_sold = 0
         return sales + new_sales
-    
+
     def get_merged_products(self) -> list[MergedProduct]:
         return self.merged_products
 
 
 class Transformers:
     def _fix_numeric_fields(self, price: str):
-        for char in [' ', ',']:
-            price = str(price).replace(char, '')
-        if price in ['', '-']:
+        for char in [" ", ","]:
+            price = str(price).replace(char, "")
+        if price in ["", "-"]:
             return 0
         return float(price)
 
@@ -155,8 +158,7 @@ class ShowroomTransformer(Transformers):
         for s in self.showrooms:
             s = ShowRoom(
                 refrence=s.refrence,
-                assigned_total_sales=self._fix_numeric_fields(
-                    s.assigned_total_sales)
+                assigned_total_sales=self._fix_numeric_fields(s.assigned_total_sales),
             )
             cleaned.append(s)
         return cleaned
