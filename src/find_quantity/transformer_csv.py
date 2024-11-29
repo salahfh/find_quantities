@@ -56,6 +56,8 @@ class MergeSplitProductsMixin:
                     groupe_code=p1.groupe_code,
                     prix=shared_price,
                     stock_qt=shared_stock,
+                    tee=p1.tee,
+                    rta=p1.rta,
                 )
                 p1.stock_qt = abs(shared_stock - p1.stock_qt)
                 p2.stock_qt = abs(shared_stock - p2.stock_qt)
@@ -109,7 +111,7 @@ class MergeSplitProductsMixin:
 
 class Transformers:
     def _fix_numeric_fields(self, price: str):
-        for char in [" ", ","]:
+        for char in [" ", ",", '%']:
             price = str(price).replace(char, "")
         if price in ["", "-"]:
             return 0
@@ -135,6 +137,8 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
                 groupe_code=self.strip_white_spaces(p.groupe_code),
                 stock_qt=self._fix_stock_qt(p.stock_qt),
                 prix=self._fix_numeric_fields(p.prix),
+                rta=self._fix_numeric_fields(p.rta),
+                tee=self._fix_numeric_fields(p.tee) / 100 , # percentage
             )
             cleaned.append(p)
         self.products = cleaned

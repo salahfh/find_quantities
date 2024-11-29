@@ -30,6 +30,9 @@ class Report:
             "Designation",
             "Groupe-Code",
             "Prix",
+            'RTA',
+            'TEE',
+            'TVA',
             "Current_Stock",
             "Initial_stock",
             "Total",
@@ -44,6 +47,9 @@ class Report:
                 s.product.designation,
                 s.product.groupe_code,
                 s.product.prix,
+                s.product.rta,
+                s.product.tee,
+                s.product.tva,
                 s.product.stock_qt,
                 s.product.stock_qt_intial,
                 s.sale_total_amount,
@@ -66,6 +72,9 @@ class Report:
             "designation",
             "groupe_code",
             "prix",
+            'RTA',
+            'TEE',
+            'TVA'
             "stock_qt",
             "intial_stock_qt",
         ]
@@ -76,6 +85,9 @@ class Report:
                 p.designation,
                 p.groupe_code,
                 p.prix,
+                p.rta,
+                p.tee,
+                p.tva,
                 p.stock_qt,
                 p.stock_qt_intial,
             )
@@ -184,8 +196,12 @@ class Report:
             "designation",
             "groupe_code",
             "prix",
+            'RTA',
+            'TEE',
+            'TVA',
             "Units_sold",
             "Total",
+            'Total TTC'
         ]
         data = [
             (
@@ -196,8 +212,12 @@ class Report:
                 s.product.designation,
                 s.product.groupe_code,
                 s.product.prix,
+                s.product.rta,
+                s.product.tee,
+                s.product.tva,
                 s.units_sold,
                 s.sale_total_amount,
+                s.total_ttc,
             )
             for d in showroom.daily_sales
             for s in d.sales

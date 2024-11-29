@@ -1,13 +1,6 @@
 import copy
-import logging
 from dataclasses import dataclass, field
 from typing import NewType
-
-logger = logging.getLogger(__name__)
-
-
-class ProductAlreadyAddedException(Exception):
-    """When trying to add the same product more than once, it'll alert you."""
 
 
 class CannotCheckoutMoreThanStockQTException(Exception):
@@ -26,7 +19,16 @@ class Product:
     groupe_code: str
     stock_qt: int
     prix: float
+    tee: float
+    rta: float
+    tva: float = 0.19
     returned: bool = False
+
+    @property
+    def prix_ttc(self) -> float:
+        m_tee = self.prix * self.tee
+        m_tva = (self.prix + m_tee) * self.tva 
+        return round(self.prix + m_tee + m_tva + self.rta, 2)
 
     def __str__(self):
         return f"Produit {self.n_article} ({self.prix} DZD | {self.stock_qt} Units)"
@@ -61,12 +63,16 @@ class Sale:
     product: Product
     units_sold: int = 0
 
+    def __repr__(self):
+        return f"Sale {self.product.n_article} (Sold: {self.units_sold})"
+    
     @property
     def sale_total_amount(self):
         return self.product.prix * self.units_sold
 
-    def __repr__(self):
-        return f"Sale {self.product.n_article} (Sold: {self.units_sold})"
+    @property
+    def total_ttc(self) -> float:
+        return self.product.prix_ttc * self.units_sold
 
 
 @dataclass

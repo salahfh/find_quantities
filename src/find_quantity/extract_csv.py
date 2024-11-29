@@ -19,6 +19,8 @@ def extract_products(
             groupe_code=row["groupe_code"],
             prix=row["prix"],
             stock_qt=row["stock_qt"],
+            tee=row['TEE'],
+            rta=row['RTA']
         )
         values[row["mois"]].append(p)
     return values
@@ -58,6 +60,8 @@ def extract_calculation_report(
                 groupe_code=row["Groupe-Code"],
                 prix=float(row["Prix"]),
                 stock_qt=int(row["Current_Stock"]),
+                tee=float(row['TEE']),
+                rta=float(row['RTA']),
             ),
             units_sold=int(row["Quantite"]),
         )
