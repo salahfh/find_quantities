@@ -1,8 +1,8 @@
 from find_quantity.commands import (
     CalculateQuantitiesCommand,
     ProcessFilesCommand,
-    ValidateQuantitiesCommand,
     DevideProductTo26Days,
+    SplitCombinedProductsCommand
 )
 
 if __name__ == "__main__":
@@ -10,6 +10,6 @@ if __name__ == "__main__":
         # c = ProcessFilesCommand().execute()
         # c = CalculateQuantitiesCommand().execute()
         c = DevideProductTo26Days().execute()
-        # c = ValidateQuantitiesCommand().execute()
+        c = SplitCombinedProductsCommand().execute()
     except KeyboardInterrupt:
         print("Bye!")

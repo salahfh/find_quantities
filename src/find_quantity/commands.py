@@ -1,4 +1,5 @@
 from pathlib import Path
+import copy
 
 from find_quantity.data_quality_control import (
     product_validation,
@@ -9,11 +10,13 @@ from find_quantity.extract_csv import (
     extract_calculation_report,
     extract_products,
     extract_showrooms,
+    load_merged_products,
+    load_raw_file,
 )
-from find_quantity.model import Inventory, ShowRoom
+from find_quantity.model import Inventory, ShowRoom, Product, Sale
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
-from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer
+from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer, MergeSplitProductsMixin
 
 
 PROJECT_FOLDER = Path(r"data/")
@@ -125,31 +128,52 @@ class DevideProductTo26Days:
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
             print()
+            break
 
 
 
 class SplitCombinedProductsCommand:
     def execute(self):
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
-        raw_products = extract_products(path=RAW_PRODUCTS_DATA)
+        merged_products = load_merged_products(path=STEP_ONE_TRANSFORM_PATH / 'merged_product.csv')
+        final_report = load_raw_file(path=STEP_THREE_VALIDATE_PATH / 'daily_sales.csv')
+        p_transfomer = MergeSplitProductsMixin(products=[])
+        data = []
+        for line in final_report:
+            # Handle returned products
+            if float(line['prix']) < 0:
+                line['prix'] = float(line['prix']) * -1
+                line['Units_sold'] = float(line['Units_sold']) * -1
+            stem = p_transfomer._find_product_stem(line['n_article'], prefix=['-C'])
+            if stem:
+            # Split Merged Products
+                pc = Product(
+                    n_article=line['n_article'],
+                    designation=line['designation'],
+                    groupe_code=line['groupe_code'],
+                    prix=float(line['prix']),
+                    stock_qt=int(line['Units_sold']),
+                    tee=float(line['TEE']),
+                    rta=float(line['RTA']),
+                )
+                code = (line['mois'], stem)
+                for i in [1, 2]: 
+                    p = copy.copy(pc)
+                    line = copy.copy(line)
+                    p.n_article = merged_products[code][f'p{i}_n_article']
+                    p.designation = merged_products[code][f'p{i}_designation']
+                    p.prix = float(merged_products[code][f'p{i}_prix'])
+                    sale = Sale(product=p, units_sold=p.stock_qt)
 
-        calculation_report = extract_calculation_report(
-            path=STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
-        )
-        for month, showrooms, raw_month_products in zip(
-            calculation_report.keys(),
-            calculation_report.values(),
-            raw_products.values(),
-        ):
-            p_transfomer = ProductTransformer(products=raw_month_products)
-            p_list = p_transfomer.load()
-            for sh in showrooms.values():
-                sh.sales = p_transfomer.split_product(
-                    sales=sh.sales, all_products=p_list
-                )
-                report.write_showrooms_report(
-                    month=month, showroom=sh, filename_prefix="_split"
-                )
+                    line['n_article'] = p.n_article
+                    line['designation'] = p.designation
+                    line['prix'] = p.prix
+                    line['Total'] = sale.sale_total_amount
+                    line['Total TTC'] = sale.total_ttc
+                    data.append(line)
+                continue
+            data.append(line)
+        report.write_generic_list_of_dicts(ld=data, filename='final_daily_sales')
 
 
 class ValidateQuantitiesCommand:
@@ -176,8 +200,4 @@ class FinalFormatingCommand:
 
 
 if __name__ == "__main__":
-    # c = SplitCombinedProductsCommand().excute()
-    # c = ValidateQuantitiesCommand().excute()
-    c = ProcessFilesCommand().execute()
-    c = CalculateQuantitiesCommand().execute()
-    c = DevideProductTo26Days().execute()
+    c = SplitCombinedProductsCommand().execute()

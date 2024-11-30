@@ -2,7 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from find_quantity.commons import IOTools
-from find_quantity.model import Month, Product, Sale, ShowRoom
+from find_quantity.model import Month, Product, Sale, ShowRoom, MergedProduct
 
 WORKING_DIR = Path(r"data")
 
@@ -68,6 +68,19 @@ def extract_calculation_report(
         s.product.stock_qt_intial = int(row["Initial_stock"])
         values[row["mois"]].get(row["Showroom"]).add_sale(s)
     return values
+
+
+@IOTools.from_csv()
+def load_merged_products(data: list[dict], path: Path):
+    values: dict = defaultdict(dict)
+    for row in data:
+        values[(row['mois'], row["code"])] = row
+    return values
+
+
+@IOTools.from_csv()
+def load_raw_file(data: list[dict], path: Path):
+    return data
 
 
 if __name__ == "__main__":

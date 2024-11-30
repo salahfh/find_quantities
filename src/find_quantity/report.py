@@ -12,6 +12,13 @@ class Report:
         self.output_folder = output_folder
 
     @IOTools.to_csv(mode="a")
+    def write_generic_list_of_dicts(self, ld: list[dict], filename: str):
+        path = self.output_folder / f"{filename}.csv"
+        header = ld[0].keys()
+        data = [d.values() for d in ld]
+        return path, header, data
+
+    @IOTools.to_csv(mode="a")
     def write_showrooms_report(
         self, showroom: ShowRoom, month: int, filename_prefix: str = None
     ):
@@ -127,7 +134,7 @@ class Report:
         ]
         return path, header, data
 
-    @IOTools.to_csv(mode="w")
+    @IOTools.to_csv(mode="a")
     def write_merged_products(
         self, month: int, merged_products: list[MergedProduct]
     ) -> None:

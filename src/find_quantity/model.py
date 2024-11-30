@@ -77,7 +77,6 @@ class Customer:
         key = ''.join((str(s) for s in [month, day, self.id, showroom_name]))
         hash_ = md5(key.encode('utf-8')).hexdigest()
         return f'C{hash_[0:10]}'.upper()
-        
 
 
 @dataclass
