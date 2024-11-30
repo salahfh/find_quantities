@@ -22,6 +22,7 @@ RAW_SHOWROOMS_DATA: Path = Path(r"data\showrooms.csv")
 STEP_ONE_TRANSFORM_PATH = PROJECT_FOLDER / "output" / "1. transform"
 STEP_TWO_CALCULATE_PATH = PROJECT_FOLDER / "output" / "2. Calculate"
 STEP_THREE_VALIDATE_PATH = PROJECT_FOLDER / "output" / "3. Validate"
+DAYS = 26
 
 
 class SetupFolderStructure:
@@ -63,11 +64,6 @@ class CalculateQuantitiesCommand:
             inv = Inventory(products=products)
             solver = Solver()
 
-            # TODO: Delete this debugging line.
-            report.write_product_transformed(
-                products=inv.get_products(), month=month, filename_prefix="_start"
-            )
-
             # Filter showrooms with zero sales
             showrooms = [sh for sh in showrooms if sh.assigned_total_sales]
 
@@ -104,7 +100,6 @@ class CalculateQuantitiesCommand:
 
 class DevideProductTo26Days:
     def execute(self):
-        DAYS = 26
         solver = Solver()
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
         calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
@@ -113,14 +108,24 @@ class DevideProductTo26Days:
         for month, showrooms in calculation_report.items():
             print(f"Daily Product Distribution {month}", end="\t")
             for sh in showrooms.values():
+                # Devide to 26 days
                 print(".", end="")
                 inv = Inventory(products=[])
                 inv.add_products_from_sales(sh.sales)
-                daily_sales = solver.distrubute_remaining_products(inv, DAYS)
+                daily_sales = solver.distrubute_products_equally(inv, DAYS)
                 for day, sales in zip(range(1, DAYS + 1), daily_sales):
                     sh.add_daily_sales(day=day, sales=sales)
+
+                # Split by client 
+                for day in sh.daily_sales:
+                    customers = day.total_units_sold
+                    inv = Inventory(products=[])
+                    inv.add_products_from_sales(day.sales)
+                    sales_per_customer = solver.distrubute_products_equally(inv, customers)
+                    day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
             print()
+
 
 
 class SplitCombinedProductsCommand:

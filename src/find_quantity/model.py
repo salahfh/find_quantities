@@ -1,3 +1,4 @@
+from hashlib import md5
 import copy
 from dataclasses import dataclass, field
 from typing import NewType
@@ -26,7 +27,7 @@ class Product:
 
     @property
     def prix_ttc(self) -> float:
-        m_tee = self.prix * self.tee
+        m_tee = self.prix * self.tee / 100
         m_tva = (self.prix + m_tee) * self.tva 
         return round(self.prix + m_tee + m_tva + self.rta, 2)
 
@@ -49,14 +50,6 @@ class Product:
 
 
 @dataclass
-class MergedProduct:
-    code: str
-    p_C: Product
-    p_I: Product
-    p_O: Product
-
-
-@dataclass
 class Sale:
     """Class to hold final data returned after calculating the quantities."""
 
@@ -76,9 +69,22 @@ class Sale:
 
 
 @dataclass
+class Customer:
+    id: int
+    purchase: list[Sale]
+
+    def get_uniq_id(self, month: Month, day: int, showroom_name: str) -> str:
+        key = ''.join((str(s) for s in [month, day, self.id, showroom_name]))
+        hash_ = md5(key.encode('utf-8')).hexdigest()
+        return f'C{hash_[0:10]}'.upper()
+        
+
+
+@dataclass
 class DailySale:
     day: int
     sales: list[Sale]
+    customers: list[Customer] = field(default_factory=list)
 
     @property
     def sale_total_amount(self) -> float:
@@ -87,6 +93,14 @@ class DailySale:
     @property
     def total_units_sold(self) -> float:
         return sum([s.units_sold for s in self.sales])
+    
+    def add_customer_sales(self, sales: list[Sale]) -> None:
+        for i, sale in enumerate(sales):
+            pur = Customer(
+                id = i+1,
+                purchase=sale
+            )
+            self.customers.append(pur)
 
     def __repr__(self):
         return f"DailySale {self.day} (Sold: {self.sale_total_amount} DZD | {self.total_units_sold} Units)"
@@ -180,6 +194,13 @@ class Inventory:
             products.append(p)
         self.products = self._add_products(products=products)
 
+
+@dataclass
+class MergedProduct:
+    code: str
+    p_C: Product
+    p_I: Product
+    p_O: Product
 
 def gen_test_product(
     n_article: str = "test",

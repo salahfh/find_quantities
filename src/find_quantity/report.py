@@ -192,6 +192,7 @@ class Report:
             "mois",
             "showroom",
             "day",
+            "customer_id", 
             "n_article",
             "designation",
             "groupe_code",
@@ -208,19 +209,21 @@ class Report:
                 month,
                 showroom.refrence,
                 d.day,
-                s.product.n_article,
-                s.product.designation,
-                s.product.groupe_code,
-                s.product.prix,
-                s.product.rta,
-                s.product.tee,
-                s.product.tva,
-                s.units_sold,
-                s.sale_total_amount,
-                s.total_ttc,
+                c.get_uniq_id(month, d.day, showroom.refrence),
+                pur.product.n_article,
+                pur.product.designation,
+                pur.product.groupe_code,
+                pur.product.prix,
+                pur.product.rta,
+                pur.product.tee,
+                pur.product.tva,
+                pur.units_sold,
+                pur.sale_total_amount,
+                pur.total_ttc,
             )
             for d in showroom.daily_sales
-            for s in d.sales
-            if s.units_sold
+            for c in d.customers
+            for pur in c.purchase
+            if pur.units_sold
         ]
         return path, header, data

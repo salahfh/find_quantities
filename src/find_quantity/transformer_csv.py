@@ -138,7 +138,7 @@ class ProductTransformer(Transformers, MergeSplitProductsMixin):
                 stock_qt=self._fix_stock_qt(p.stock_qt),
                 prix=self._fix_numeric_fields(p.prix),
                 rta=self._fix_numeric_fields(p.rta),
-                tee=self._fix_numeric_fields(p.tee) / 100 , # percentage
+                tee=self._fix_numeric_fields(p.tee),
             )
             cleaned.append(p)
         self.products = cleaned

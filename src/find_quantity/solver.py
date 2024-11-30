@@ -87,7 +87,7 @@ class Solver:
         inventory.update_quantities(sales=sales)
         return sales
 
-    def generate_daily_qt(self, n: int, summ: int) -> list[int]:
+    def generate_equal_qt(self, n: int, summ: int) -> list[int]:
         q, r = divmod(summ, n)
         qt = [q for _ in range(n)]
         for i in range(len(qt)):
@@ -98,7 +98,7 @@ class Solver:
         random.shuffle(qt)
         return qt
 
-    def distrubute_remaining_products(
+    def distrubute_products_equally(
         self, inventory: Inventory, n: int
     ) -> list[list[Sale]]:
         products = inventory.get_products()
@@ -106,7 +106,7 @@ class Solver:
         for p in products:
             sl = [
                 Sale(product=p, units_sold=q)
-                for q in self.generate_daily_qt(n=n, summ=p.stock_qt)
+                for q in self.generate_equal_qt(n=n, summ=p.stock_qt)
             ]
             [sales[i].append(s) for i, s in enumerate(sl)]
             inventory.update_quantities(sales=[Sale(product=p, units_sold=p.stock_qt)])
