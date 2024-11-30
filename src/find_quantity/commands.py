@@ -49,10 +49,10 @@ class ProcessFilesCommand:
 class CalculateQuantitiesCommand:
     def execute(self):
         report = Report(output_folder=STEP_TWO_CALCULATE_PATH)
-        p_list_all = extract_products(
+        p_list_all = extract_products(path=
             STEP_ONE_TRANSFORM_PATH / "products_transformed.csv"
         )
-        s_list_all = extract_showrooms(
+        s_list_all = extract_showrooms(path=
             STEP_ONE_TRANSFORM_PATH / "showrooms_transformed.csv"
         )
         for month, p_list, s_list in zip(
@@ -62,6 +62,11 @@ class CalculateQuantitiesCommand:
             showrooms = ShowroomTransformer(showrooms=s_list).load()
             inv = Inventory(products=products)
             solver = Solver()
+
+            # TODO: Delete this debugging line.
+            report.write_product_transformed(
+                products=inv.get_products(), month=month, filename_prefix="_start"
+            )
 
             # Filter showrooms with zero sales
             showrooms = [sh for sh in showrooms if sh.assigned_total_sales]
@@ -121,7 +126,7 @@ class DevideProductTo26Days:
 class SplitCombinedProductsCommand:
     def execute(self):
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
-        raw_products = extract_products(RAW_PRODUCTS_DATA)
+        raw_products = extract_products(path=RAW_PRODUCTS_DATA)
 
         calculation_report = extract_calculation_report(
             path=STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
@@ -145,7 +150,7 @@ class SplitCombinedProductsCommand:
 class ValidateQuantitiesCommand:
     def execute(self):
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
-        raw_products = extract_products(RAW_PRODUCTS_DATA)
+        raw_products = extract_products(path=RAW_PRODUCTS_DATA)
         calculation_report = extract_calculation_report(
             path=STEP_THREE_VALIDATE_PATH / "showrooms_calculation_report__split.csv"
         )

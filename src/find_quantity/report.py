@@ -74,7 +74,7 @@ class Report:
             "prix",
             'RTA',
             'TEE',
-            'TVA'
+            'TVA',
             "stock_qt",
             "intial_stock_qt",
         ]

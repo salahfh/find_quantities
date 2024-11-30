@@ -23,7 +23,7 @@ def extract_products(
             rta=row['RTA']
         )
         values[row["mois"]].append(p)
-    return values
+    return dict(sorted(values.items()))
 
 
 @IOTools.from_csv()
@@ -37,7 +37,7 @@ def extract_showrooms(
             assigned_total_sales=row["assigned_total_sales"],
         )
         values[row["mois"]].append(s)
-    return values
+    return dict(sorted(values.items()))
 
 
 @IOTools.from_csv()
