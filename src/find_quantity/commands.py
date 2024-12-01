@@ -190,10 +190,11 @@ class SplitCombinedProductsCommand:
                     data.append(line)
                 continue
             data.append(line)
+        last_month = int(line['mois'])
         report.write_generic_list_of_dicts(
             ld=data,
             filename="final_daily_sales",
-            split_values=[str(i) for i in range(1, 8)],
+            split_values=[str(i) for i in range(1, last_month+1)],
         )
 
 

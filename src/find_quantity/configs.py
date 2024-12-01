@@ -27,7 +27,8 @@ class Config:
             self.STEP_TWO_CALCULATE_PATH,
             self.STEP_THREE_VALIDATE_PATH,
         ]:
-            [f.unlink() for f in dir.glob("*")]
+            if dir.exists():
+                [f.unlink() for f in dir.glob("*")]
 
 
 config = Config()
