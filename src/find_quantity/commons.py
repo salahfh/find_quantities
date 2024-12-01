@@ -46,7 +46,7 @@ class IOTools:
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
                 with open(path, "r") as f:
-                    reader = csv.DictReader(f)
+                    reader = csv.DictReader(f, delimiter='\t')
                     data = [row for row in reader]
                     return func(data, *args, **kwargs)
 
@@ -67,7 +67,7 @@ class IOTools:
                 path, header, data = func(*args, **kwargs)
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
-                    writer = csv.writer(f, lineterminator="\n")
+                    writer = csv.writer(f, delimiter='\t', lineterminator="\n")
                     if writer_header or mode == "w":
                         writer.writerow(header)
                     for line in data:
