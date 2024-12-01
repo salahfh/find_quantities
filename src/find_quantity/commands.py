@@ -1,11 +1,5 @@
-from pathlib import Path
 import copy
 
-from find_quantity.data_quality_control import (
-    product_validation,
-    validate_calculated_products,
-    validate_extracted_product_raw_data,
-)
 from find_quantity.extract_csv import (
     extract_calculation_report,
     extract_products,
@@ -13,30 +7,45 @@ from find_quantity.extract_csv import (
     load_merged_products,
     load_raw_file,
 )
+from find_quantity.configs import config 
 from find_quantity.model import Inventory, ShowRoom, Product, Sale
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
 from find_quantity.transformer_csv import ProductTransformer, ShowroomTransformer, MergeSplitProductsMixin
 
 
-PROJECT_FOLDER = Path(r"data/")
-RAW_PRODUCTS_DATA: Path = Path(r"data\produits.csv")
-RAW_SHOWROOMS_DATA: Path = Path(r"data\showrooms.csv")
-STEP_ONE_TRANSFORM_PATH = PROJECT_FOLDER / "output" / "1. transform"
-STEP_TWO_CALCULATE_PATH = PROJECT_FOLDER / "output" / "2. Calculate"
-STEP_THREE_VALIDATE_PATH = PROJECT_FOLDER / "output" / "3. Validate"
-DAYS = 26
-
 
 class SetupFolderStructure:
-    pass
+    def execute(self) -> None:
+        if config.CLEAN_BEFORE_EACH_RUN:
+            config.clean_up()
+
+        config.create_folders()
+        report = Report(output_folder=config.PROJECT_FOLDER)
+        message = "The {} doesn't exists.\nPlease Replace the template in the folder {}."
+
+        quit_ = False
+        if not config.RAW_PRODUCTS_DATA.exists():
+            print(message.format(config.RAW_PRODUCTS_DATA, config.PROJECT_FOLDER))
+            report.write_product_input_template_file(path=config.RAW_PRODUCTS_DATA)
+            quit_ = True
+            
+        if not config.RAW_SHOWROOMS_DATA.exists():
+            print(message.format(config.RAW_SHOWROOMS_DATA, config.PROJECT_FOLDER))
+            report.write_showroom_input_template_file(path=config.RAW_SHOWROOMS_DATA)
+            quit_ = True
+        
+        if quit_:
+            exit(0)
+
+        
 
 
 class ProcessFilesCommand:
     def execute(self) -> None:
-        report = Report(output_folder=STEP_ONE_TRANSFORM_PATH)
-        products = extract_products(path=RAW_PRODUCTS_DATA)
-        showrooms = extract_showrooms(path=RAW_SHOWROOMS_DATA)
+        report = Report(output_folder=config.STEP_ONE_TRANSFORM_PATH)
+        products = extract_products(path=config.RAW_PRODUCTS_DATA)
+        showrooms = extract_showrooms(path=config.RAW_SHOWROOMS_DATA)
         for i, (s_list, p_list) in enumerate(
             zip(showrooms.values(), products.values())
         ):
@@ -52,12 +61,12 @@ class ProcessFilesCommand:
 
 class CalculateQuantitiesCommand:
     def execute(self):
-        report = Report(output_folder=STEP_TWO_CALCULATE_PATH)
+        report = Report(output_folder=config.STEP_TWO_CALCULATE_PATH)
         p_list_all = extract_products(path=
-            STEP_ONE_TRANSFORM_PATH / "products_transformed.csv"
+            config.STEP_ONE_TRANSFORM_PATH / "products_transformed.csv"
         )
         s_list_all = extract_showrooms(path=
-            STEP_ONE_TRANSFORM_PATH / "showrooms_transformed.csv"
+            config.STEP_ONE_TRANSFORM_PATH / "showrooms_transformed.csv"
         )
         for month, p_list, s_list in zip(
             p_list_all.keys(), p_list_all.values(), s_list_all.values()
@@ -104,9 +113,9 @@ class CalculateQuantitiesCommand:
 class DevideProductTo26Days:
     def execute(self):
         solver = Solver()
-        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
+        report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
         calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
-            path=STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
+            path=config.STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
         )
         for month, showrooms in calculation_report.items():
             print(f"Daily Product Distribution {month}", end="\t")
@@ -115,8 +124,8 @@ class DevideProductTo26Days:
                 print(".", end="")
                 inv = Inventory(products=[])
                 inv.add_products_from_sales(sh.sales)
-                daily_sales = solver.distrubute_products_equally(inv, DAYS)
-                for day, sales in zip(range(1, DAYS + 1), daily_sales):
+                daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
+                for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
                     sh.add_daily_sales(day=day, sales=sales)
 
                 # Split by client 
@@ -134,9 +143,9 @@ class DevideProductTo26Days:
 class SplitCombinedProductsCommand:
     def execute(self):
         print("Splitting combined products and fixing returned items.")
-        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
-        merged_products = load_merged_products(path=STEP_ONE_TRANSFORM_PATH / 'merged_product.csv')
-        final_report = load_raw_file(path=STEP_THREE_VALIDATE_PATH / 'daily_sales.csv')
+        report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
+        merged_products = load_merged_products(path=config.STEP_ONE_TRANSFORM_PATH / 'merged_product.csv')
+        final_report = load_raw_file(path=config.STEP_THREE_VALIDATE_PATH / 'daily_sales.csv')
         p_transfomer = MergeSplitProductsMixin(products=[])
         data = []
         for line in final_report:
@@ -178,28 +187,6 @@ class SplitCombinedProductsCommand:
             filename='final_daily_sales',
             split_values=[str(i) for i in range(1, 8)])
 
-
-class ValidateQuantitiesCommand:
-    def execute(self):
-        report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
-        raw_products = extract_products(path=RAW_PRODUCTS_DATA)
-        calculation_report = extract_calculation_report(
-            path=STEP_THREE_VALIDATE_PATH / "showrooms_calculation_report__split.csv"
-        )
-        validation_data_product_calc = validate_calculated_products(calculation_report)
-        simplied_product_raw_data = validate_extracted_product_raw_data(raw_products)
-        data = product_validation(
-            validation_data_product_calc, simplied_product_raw_data
-        )
-        report.valid_product_quantity_report(data)
-
-
-class FinalFormatingCommand:
-    def __init__(self):
-        pass
-
-    def excute(self):
-        pass
 
 
 if __name__ == "__main__":

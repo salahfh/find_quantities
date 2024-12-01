@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from find_quantity.commons import IOTools
-from find_quantity.data_quality_control import ValidateProductQuantity
 from find_quantity.model import MergedProduct, Product, ShowRoom
 from find_quantity.solver import Metrics
 
@@ -174,34 +173,6 @@ class Report:
         ]
         return path, header, data
 
-    @IOTools.to_csv(mode="w")
-    def valid_product_quantity_report(
-        self, validation_data: list[ValidateProductQuantity]
-    ) -> None:
-        path = self.output_folder / "product_quantity_validation.csv"
-        header = [
-            "mois",
-            "Product_name",
-            "Remaining_stock",
-            "Units_sold",
-            "Raw_data_stock_initial",
-            "Stock_diff",
-            "Calculation_correct?",
-        ]
-        data = [
-            (
-                v.month,
-                v.product_name,
-                v.calc_stock_qt,
-                v.calc_all_units_sold,
-                v.calc_stock_diff,
-                v.raw_data_stock_initial,
-                v.is_calc_correct,
-            )
-            for v in validation_data
-        ]
-        return path, header, data
-
     @IOTools.to_csv(mode="a")
     def write_daily_sales(self, month: int, showroom: ShowRoom) -> None:
         path = self.output_folder / "daily_sales.csv"
@@ -243,4 +214,30 @@ class Report:
             for pur in c.purchase
             if pur.units_sold
         ]
+        return path, header, data
+
+    @IOTools.to_csv(mode="w")
+    def write_product_input_template_file(self, path: Path):
+        header = [
+            "mois",
+            "n_article",
+            "designation",
+            "groupe_code",
+            "prix",
+            'RTA',
+            'TEE',
+            "stock_qt",
+            "intial_stock_qt",
+        ]
+        data = []
+        return path, header, data
+
+    @IOTools.to_csv(mode="w")
+    def write_showroom_input_template_file(self, path: Path):
+        header = [
+            "mois",
+            "refrence",
+            "assigned_total_sales",
+        ]
+        data = []
         return path, header, data

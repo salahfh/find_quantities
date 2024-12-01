@@ -8,10 +8,6 @@ class ProductDuplicatedException(Exception):
     pass
 
 
-class ProductAreAlreadySplit(Exception):
-    pass
-
-
 class MergeSplitProductsMixin:
     """
     Some products such AC come in two items Ext and Int.

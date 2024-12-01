@@ -4,13 +4,10 @@ from pathlib import Path
 from find_quantity.commons import IOTools
 from find_quantity.model import Month, Product, Sale, ShowRoom
 
-WORKING_DIR = Path(r"data")
-
 
 @IOTools.from_csv()
 def extract_products(
-    data: list[dict], path: Path = WORKING_DIR / "produits.csv"
-) -> dict[str, list[Product]]:
+    data: list[dict], path: Path) -> dict[str, list[Product]]:
     values = defaultdict(list)
     for row in data:
         p = Product(
@@ -28,8 +25,7 @@ def extract_products(
 
 @IOTools.from_csv()
 def extract_showrooms(
-    data: list[dict], path: Path = WORKING_DIR / "showrooms.csv"
-) -> dict[str, list[ShowRoom]]:
+    data: list[dict], path: Path) -> dict[str, list[ShowRoom]]:
     values = defaultdict(list)
     for row in data:
         s = ShowRoom(
