@@ -26,7 +26,7 @@ class SetupFolderStructure:
         config.create_folders()
         report = Report(output_folder=config.PROJECT_FOLDER)
         message = (
-            "The {} doesn't exists.\nPlease Replace the template in the folder {}."
+            "\nThe {} doesn't exists.\nPlease Replace the template in the folder {}."
         )
 
         quit_ = False
