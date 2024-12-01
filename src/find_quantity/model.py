@@ -28,7 +28,7 @@ class Product:
     @property
     def prix_ttc(self) -> float:
         m_tee = self.prix * self.tee / 100
-        m_tva = (self.prix + m_tee) * self.tva 
+        m_tva = (self.prix + m_tee) * self.tva
         return round(self.prix + m_tee + m_tva + self.rta, 2)
 
     def __str__(self):
@@ -58,7 +58,7 @@ class Sale:
 
     def __repr__(self):
         return f"Sale {self.product.n_article} (Sold: {self.units_sold})"
-    
+
     @property
     def sale_total_amount(self):
         return self.product.prix * self.units_sold
@@ -74,9 +74,9 @@ class Customer:
     purchase: list[Sale]
 
     def get_uniq_id(self, month: Month, day: int, showroom_name: str) -> str:
-        key = ''.join((str(s) for s in [month, day, self.id, showroom_name]))
-        hash_ = md5(key.encode('utf-8')).hexdigest()
-        return f'C{hash_[0:10]}'.upper()
+        key = "".join((str(s) for s in [month, day, self.id, showroom_name]))
+        hash_ = md5(key.encode("utf-8")).hexdigest()
+        return f"C{hash_[0:10]}".upper()
 
 
 @dataclass
@@ -92,13 +92,10 @@ class DailySale:
     @property
     def total_units_sold(self) -> float:
         return sum([s.units_sold for s in self.sales])
-    
+
     def add_customer_sales(self, sales: list[Sale]) -> None:
         for i, sale in enumerate(sales):
-            pur = Customer(
-                id = i+1,
-                purchase=sale
-            )
+            pur = Customer(id=i + 1, purchase=sale)
             self.customers.append(pur)
 
     def __repr__(self):
@@ -200,6 +197,7 @@ class MergedProduct:
     p_C: Product
     p_I: Product
     p_O: Product
+
 
 def gen_test_product(
     n_article: str = "test",

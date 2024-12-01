@@ -15,14 +15,16 @@ class Report:
         return path, header, data
 
     @IOTools.to_csv(mode="a")
-    def write_generic_list_of_dicts(self, ld: list[dict], filename: str, split_values: str=None):
+    def write_generic_list_of_dicts(
+        self, ld: list[dict], filename: str, split_values: str = None
+    ):
         path = self.output_folder / f"{filename}.csv"
         header = ld[0].keys()
         data = [tuple(d.values()) for d in ld]
         if split_values:
             for portion in split_values:
                 chunk = [row for row in data if row[0] == portion]
-                path2 = path.parents[0] / f'{path.stem}_{portion}.csv'
+                path2 = path.parents[0] / f"{path.stem}_{portion}.csv"
                 self.write_generic_list(path2, header, chunk)
             data = []
         return path, header, data
@@ -46,9 +48,9 @@ class Report:
             "Designation",
             "Groupe-Code",
             "Prix",
-            'RTA',
-            'TEE',
-            'TVA',
+            "RTA",
+            "TEE",
+            "TVA",
             "Current_Stock",
             "Initial_stock",
             "Total",
@@ -88,9 +90,9 @@ class Report:
             "designation",
             "groupe_code",
             "prix",
-            'RTA',
-            'TEE',
-            'TVA',
+            "RTA",
+            "TEE",
+            "TVA",
             "stock_qt",
             "intial_stock_qt",
         ]
@@ -180,17 +182,17 @@ class Report:
             "mois",
             "showroom",
             "day",
-            "customer_id", 
+            "customer_id",
             "n_article",
             "designation",
             "groupe_code",
             "prix",
-            'RTA',
-            'TEE',
-            'TVA',
+            "RTA",
+            "TEE",
+            "TVA",
             "Units_sold",
             "Total",
-            'Total TTC'
+            "Total TTC",
         ]
         data = [
             (
@@ -224,8 +226,8 @@ class Report:
             "designation",
             "groupe_code",
             "prix",
-            'RTA',
-            'TEE',
+            "RTA",
+            "TEE",
             "stock_qt",
             "intial_stock_qt",
         ]

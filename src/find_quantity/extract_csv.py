@@ -6,8 +6,7 @@ from find_quantity.model import Month, Product, Sale, ShowRoom
 
 
 @IOTools.from_csv()
-def extract_products(
-    data: list[dict], path: Path) -> dict[str, list[Product]]:
+def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
     values = defaultdict(list)
     for row in data:
         p = Product(
@@ -16,16 +15,15 @@ def extract_products(
             groupe_code=row["groupe_code"],
             prix=row["prix"],
             stock_qt=row["stock_qt"],
-            tee=row['TEE'],
-            rta=row['RTA']
+            tee=row["TEE"],
+            rta=row["RTA"],
         )
         values[row["mois"]].append(p)
     return dict(sorted(values.items()))
 
 
 @IOTools.from_csv()
-def extract_showrooms(
-    data: list[dict], path: Path) -> dict[str, list[ShowRoom]]:
+def extract_showrooms(data: list[dict], path: Path) -> dict[str, list[ShowRoom]]:
     values = defaultdict(list)
     for row in data:
         s = ShowRoom(
@@ -56,8 +54,8 @@ def extract_calculation_report(
                 groupe_code=row["Groupe-Code"],
                 prix=float(row["Prix"]),
                 stock_qt=int(row["Current_Stock"]),
-                tee=float(row['TEE']),
-                rta=float(row['RTA']),
+                tee=float(row["TEE"]),
+                rta=float(row["RTA"]),
             ),
             units_sold=int(row["Quantite"]),
         )
@@ -70,7 +68,7 @@ def extract_calculation_report(
 def load_merged_products(data: list[dict], path: Path):
     values: dict = defaultdict(dict)
     for row in data:
-        values[(row['mois'], row["code"])] = row
+        values[(row["mois"], row["code"])] = row
     return values
 
 

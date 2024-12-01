@@ -4,7 +4,7 @@ from pathlib import Path
 
 @dataclass
 class Config:
-    PROJECT_FOLDER: Path = Path.home() / "find_quantities" 
+    PROJECT_FOLDER: Path = Path.home() / "find_quantities"
     RAW_PRODUCTS_DATA: Path = PROJECT_FOLDER / "produits.csv"
     RAW_SHOWROOMS_DATA: Path = PROJECT_FOLDER / "showrooms.csv"
     STEP_ONE_TRANSFORM_PATH: Path = PROJECT_FOLDER / "output" / "1-Transform"
@@ -20,13 +20,14 @@ class Config:
                 if not path_v.suffix and not path_v.exists():
                     path_v.mkdir(exist_ok=True, parents=True)
                     print(f"Creating folder {path_v} ...")
-    
-    def clean_up(self):
-        for dir in [self.STEP_ONE_TRANSFORM_PATH,
-                    self.STEP_TWO_CALCULATE_PATH,
-                    self.STEP_THREE_VALIDATE_PATH]:
-            [f.unlink() for f in dir.glob('*')]
 
-    
+    def clean_up(self):
+        for dir in [
+            self.STEP_ONE_TRANSFORM_PATH,
+            self.STEP_TWO_CALCULATE_PATH,
+            self.STEP_THREE_VALIDATE_PATH,
+        ]:
+            [f.unlink() for f in dir.glob("*")]
+
 
 config = Config()
