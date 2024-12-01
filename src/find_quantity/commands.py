@@ -128,12 +128,12 @@ class DevideProductTo26Days:
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
             print()
-            break
 
 
 
 class SplitCombinedProductsCommand:
     def execute(self):
+        print("Splitting combined products and fixing returned items.")
         report = Report(output_folder=STEP_THREE_VALIDATE_PATH)
         merged_products = load_merged_products(path=STEP_ONE_TRANSFORM_PATH / 'merged_product.csv')
         final_report = load_raw_file(path=STEP_THREE_VALIDATE_PATH / 'daily_sales.csv')
@@ -173,7 +173,10 @@ class SplitCombinedProductsCommand:
                     data.append(line)
                 continue
             data.append(line)
-        report.write_generic_list_of_dicts(ld=data, filename='final_daily_sales')
+        report.write_generic_list_of_dicts(
+            ld=data,
+            filename='final_daily_sales',
+            split_values=[str(i) for i in range(1, 8)])
 
 
 class ValidateQuantitiesCommand:

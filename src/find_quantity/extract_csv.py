@@ -2,7 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from find_quantity.commons import IOTools
-from find_quantity.model import Month, Product, Sale, ShowRoom, MergedProduct
+from find_quantity.model import Month, Product, Sale, ShowRoom
 
 WORKING_DIR = Path(r"data")
 
