@@ -13,7 +13,7 @@ Follow the steps to install the software
 * Create a new folder using the command `mkdir bin`
 * Change to the newly created folder `cd bin`
 * Create a virtual enviroment for python application `python -m venv venv`
-* Activate the virtual enviroment `.\venv\Scripts\activate.bat` 
+* Activate the virtual enviroment `.\venv\Scripts\activate` 
 * Install package from repo: `pip install git+https://github.com/salahfh/find_quantities.git`
 
 
@@ -21,7 +21,7 @@ Follow the steps to install the software
 To use the program follow these steps below
 * Open a `PowerShell` window from windows start menu
 * Change to the folder `cd bin`
-* Activate the virtual enviroment `.\venv\Scripts\activate.bat`
+* Activate the virtual enviroment `.\venv\Scripts\activate`
 * Run the command `find_quantity` and follow the instructions if it doesn't work run `python -m find_quantity`
 
 
@@ -29,7 +29,7 @@ To use the program follow these steps below
 In order to update the software follow the below steps
 * Open `PowerShell` from windows start menu
 * Change to the folder `cd bin`
-* Activate the virtual enviroment `.\venv\Scripts\activate.bat`
+* Activate the virtual enviroment `.\venv\Scripts\activate`
 * Run the command to update: `pip install git+https://github.com/salahfh/find_quantities.git`
 
 ## Issues
