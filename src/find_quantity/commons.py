@@ -4,6 +4,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, Literal
 
+from find_quantity.configs import config
+
 
 def get_default_args(func: Callable) -> dict:
     signature = inspect.signature(func)
@@ -46,7 +48,7 @@ class IOTools:
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
                 with open(path, "r") as f:
-                    reader = csv.DictReader(f)
+                    reader = csv.DictReader(f, delimiter=config.CSV_SEPERATOR)
                     data = [row for row in reader]
                     return func(data, *args, **kwargs)
 
@@ -67,7 +69,7 @@ class IOTools:
                 path, header, data = func(*args, **kwargs)
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
-                    writer = csv.writer(f, lineterminator="\n")
+                    writer = csv.writer(f, lineterminator="\n", delimiter=config.CSV_SEPERATOR)
                     if writer_header or mode == "w":
                         writer.writerow(header)
                     for line in data:

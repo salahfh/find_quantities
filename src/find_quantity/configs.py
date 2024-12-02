@@ -11,6 +11,7 @@ class Config:
     STEP_TWO_CALCULATE_PATH: Path = PROJECT_FOLDER / "output" / "2-Calculate"
     STEP_THREE_VALIDATE_PATH: Path = PROJECT_FOLDER / "output" / "3-Validate"
     CLEAN_BEFORE_EACH_RUN: bool = True
+    CSV_SEPERATOR: str = ';'
     DAYS: int = 26
 
     def create_folders(self):
