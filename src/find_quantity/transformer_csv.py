@@ -5,7 +5,14 @@ from find_quantity.model import MergedProduct, Product, Sale, ShowRoom
 
 
 class ProductDuplicatedException(Exception):
-    pass
+    def __init__(self, stem, product, *args):
+        super().__init__(*args)
+        self.product = product
+        self.stem = stem
+    
+    def print_products(self):
+        print('Product stem: ', self.stem)
+        print('Product issue: ', self.product)
 
 
 class MergeSplitProductsMixin:
@@ -41,7 +48,7 @@ class MergeSplitProductsMixin:
             if stem == "others" or len(products) == 1:
                 cleaned_products += products
             elif len(products) > 2:
-                raise ProductDuplicatedException("Duplicated Values")
+                raise ProductDuplicatedException("Duplicated Values", stem=stem, product=product)
             else:
                 p1, p2 = products
                 shared_stock = min(p1.stock_qt, p2.stock_qt)

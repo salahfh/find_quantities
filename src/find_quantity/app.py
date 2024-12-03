@@ -1,4 +1,5 @@
 import find_quantity.configs as C
+import find_quantity.transformer_csv as T
 from find_quantity.commands import (
     CalculateQuantitiesCommand,
     ProcessFilesCommand,
@@ -27,6 +28,9 @@ def main() -> None:
         print(
             f"Make sure you have data in the input files {C.config.RAW_SHOWROOMS_DATA} and {C.config.RAW_PRODUCTS_DATA}"
         )
+    except T.ProductDuplicatedException as e:
+        print(e)
+        e.print_products()
     except KeyboardInterrupt:
         print("Bye!")
 
