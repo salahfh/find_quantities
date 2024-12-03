@@ -29,7 +29,6 @@ def main() -> None:
             f"Make sure you have data in the input files {C.config.RAW_SHOWROOMS_DATA} and {C.config.RAW_PRODUCTS_DATA}"
         )
     except T.ProductDuplicatedException as e:
-        print(e)
         e.print_products()
     except KeyboardInterrupt:
         print("Bye!")

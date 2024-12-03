@@ -1,4 +1,3 @@
-import copy
 from collections import defaultdict
 
 from find_quantity.model import MergedProduct, Product, Sale, ShowRoom
@@ -11,6 +10,7 @@ class ProductDuplicatedException(Exception):
         self.stem = stem
     
     def print_products(self):
+        print('Product Duplicated')
         print('Product stem: ', self.stem)
         print('Product issue: ', self.product)
 
@@ -49,6 +49,7 @@ class MergeSplitProductsMixin:
                 cleaned_products += products
             elif len(products) > 2:
                 raise ProductDuplicatedException(stem=stem, product=product)
+                # continue
             else:
                 p1, p2 = products
                 shared_stock = min(p1.stock_qt, p2.stock_qt)
@@ -80,33 +81,12 @@ class MergeSplitProductsMixin:
     def split_product(
         self, sales: list[Sale], all_products: list[Product]
     ) -> list[Product]:
+        #   Move the part in the commands here.
         """
         Split combined products -C and return three sales for each with unit sold reset to 0
         for the -C sale and units allocated to the others.
         """
-        new_sales: list[Sale] = []
-        for s in sales:
-            code = self._find_product_stem(s.product.n_article, prefix=["-C"])
-            if code:
-                for p_inv in all_products:
-                    code_inv = self._find_product_stem(
-                        p_inv.n_article, prefix=["-O", "-I"]
-                    )
-                    if code == code_inv:
-                        p = copy.copy(p_inv)
-                        # p.stock_qt += s.product.stock_qt
-                        p.stock_qt = s.product.stock_qt
-                        new_sales.append(Sale(product=p, units_sold=s.units_sold))
-                s.units_sold = 0
-
-        # Merge it with exisiting sales if they exist
-        for sn in new_sales:
-            for s in sales:
-                if s.product == sn.product:
-                    s.product.stock_qt += sn.product.stock_qt
-                    s.units_sold += sn.units_sold
-                    sn.units_sold = 0
-        return sales + new_sales
+        pass
 
     def get_merged_products(self) -> list[MergedProduct]:
         return self.merged_products
