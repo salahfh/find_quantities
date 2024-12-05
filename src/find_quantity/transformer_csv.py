@@ -94,8 +94,11 @@ class MergeSplitProductsMixin:
 
 class Transformers:
     def _fix_numeric_fields(self, price: str):
-        for char in [" ", ",", "%"]:
-            price = str(price).replace(char, "")
+        for char, char2 in [
+            (" ", ''),
+            ("%", ''),
+            (",", '.')]:
+            price = str(price).replace(char, char2)
         if price in ["", "-"]:
             return 0
         return float(price)
