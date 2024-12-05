@@ -48,7 +48,10 @@ class IOTools:
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
                 with open(path, "r") as f:
-                    reader = csv.DictReader(f, delimiter=config.CSV_SEPERATOR)
+                    fieldnames = [field.strip() for field in next(f).split(config.CSV_SEPERATOR)]
+                    reader = csv.DictReader(f,
+                                            fieldnames=fieldnames,
+                                            delimiter=config.CSV_SEPERATOR)
                     data = [row for row in reader]
                     return func(data, *args, **kwargs)
 
