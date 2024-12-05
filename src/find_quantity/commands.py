@@ -49,10 +49,13 @@ class ProcessFilesCommand:
         report = Report(output_folder=config.STEP_ONE_TRANSFORM_PATH)
         products = extract_products(path=config.RAW_PRODUCTS_DATA)
         showrooms = extract_showrooms(path=config.RAW_SHOWROOMS_DATA)
-        for i, (s_list, p_list) in enumerate(
-            zip(showrooms.values(), products.values())
+        if len(showrooms) != len(products):
+            raise ValueError('Number of months mismatch in showroom.csv and produits.csv')
+        for month, s_list, p_list in \
+            zip(showrooms.keys(),
+                showrooms.values(),
+                products.values()
         ):
-            month = i + 1
             p_transfomer = ProductTransformer(products=p_list)
             p_list = p_transfomer.transform()
             p_merged = p_transfomer.get_merged_products()

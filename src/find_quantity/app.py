@@ -24,9 +24,10 @@ def main() -> None:
         DevideProductTo26Days().execute()
         SplitCombinedProductsCommand().execute()
     except FileNotFoundError as e:
-        print(e)
         print(
-            f"Make sure you have data in the input files {C.config.RAW_SHOWROOMS_DATA} and {C.config.RAW_PRODUCTS_DATA}"
+            e,
+            f"Make sure you have data in the input files {C.config.RAW_SHOWROOMS_DATA} and {C.config.RAW_PRODUCTS_DATA}",
+            sep='\n',
         )
     except T.ProductDuplicatedException as e:
         e.print_products()

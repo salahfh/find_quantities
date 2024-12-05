@@ -5,8 +5,15 @@ from find_quantity.commons import IOTools
 from find_quantity.model import Month, Product, Sale, ShowRoom
 
 
+def is_it_empty(value: str):
+    '''Avoid empty values'''
+    if value is None or value == '':
+        raise ValueError
+    return value
+
+
 @IOTools.from_csv()
-def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
+def extract_products(data: list[dict], path: Path) -> dict[Month, list[Product]]:
     values = defaultdict(list)
     for row in data:
         p = Product(
@@ -18,19 +25,27 @@ def extract_products(data: list[dict], path: Path) -> dict[str, list[Product]]:
             tee=row["TEE"],
             rta=row["RTA"],
         )
-        values[row["mois"]].append(p)
+        try:
+            month = is_it_empty(row['mois'])
+            values[month].append(p)
+        except ValueError:
+            print(f"{p} line skipped because has an empty month value.")
     return dict(sorted(values.items()))
 
 
 @IOTools.from_csv()
-def extract_showrooms(data: list[dict], path: Path) -> dict[str, list[ShowRoom]]:
+def extract_showrooms(data: list[dict], path: Path) -> dict[Month, list[ShowRoom]]:
     values = defaultdict(list)
     for row in data:
         s = ShowRoom(
             refrence=row["refrence"],
             assigned_total_sales=row["assigned_total_sales"],
         )
-        values[row["mois"]].append(s)
+        try:
+            month = is_it_empty(row['mois'])
+            values[month].append(s)
+        except ValueError:
+            print(f"{s} line skipped because has an empty month value.")
     return dict(sorted(values.items()))
 
 
