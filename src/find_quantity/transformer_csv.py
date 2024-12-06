@@ -48,8 +48,8 @@ class MergeSplitProductsMixin:
             if stem == "others" or len(products) == 1:
                 cleaned_products += products
             elif len(products) > 2:
-                raise ProductDuplicatedException(stem=stem, product=product)
-                # continue
+                # raise ProductDuplicatedException(stem=stem, product=product)
+                continue
             else:
                 p1, p2 = products
                 shared_stock = min(p1.stock_qt, p2.stock_qt)

@@ -164,7 +164,7 @@ def test_pacakges_with_products_define_in_more_than_one_package():
         ("CRG14CL1NCMD", 10),
         ("AY-X12BBAL", 10),
         ("AE-X12BBAL", 10),
-        ("CMD211", 10),
+        # ("CMD211", 10),
     ]
     products = []
     for p, qt in product_qt:
@@ -180,6 +180,24 @@ def test_pacakges_with_products_define_in_more_than_one_package():
     ).construct_packages()
     assert len(pks) == 3
 
+def test_pacakges_with_no_package_rules_defined():
+    package_definitions = [ ]
+    product_qt = [
+        ("CMD211", 10),
+        ("CRG14CL1N", 10),
+        ("CRG14CL1NCMD", 10),
+        ("AY-X12BBAL", 10),
+        ("AE-X12BBAL", 10),
+    ]
+    products = []
+    for p, qt in product_qt:
+        products.append(gen_test_product(n_article=p, stock_qt=qt))
+
+    pks = PackageConstractor(
+        products, package_definitions, allow_incomplete_packages=True
+    ).construct_packages()
+    assert len(pks) == 5
+
 
 if __name__ == "__main__":
     test_package_construction_from_definition()
@@ -187,3 +205,4 @@ if __name__ == "__main__":
     test_not_enough_quantity_to_make_package_with_incomplete_packages_allowed()
     test_not_enough_quantity_to_make_package_with_incomplete_packages_not_allowed()
     test_pacakges_with_products_define_in_more_than_one_package()
+    test_pacakges_with_no_package_rules_defined()

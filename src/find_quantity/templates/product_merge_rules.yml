@@ -1,0 +1,28 @@
+ProductMergeRules:
+  - rule: auto-merge -I and -O products
+    command: AutoMergeIOProducts
+
+  - rule: auto-merge NCE***CMD
+    command: AutoMergeNCEProducts
+
+  - rule: auto-merge KCG***CMD
+    command: AutoMergeKCGProducts
+
+  - rule: combine products
+    command: CombineProducts
+    packages: 
+    - products:
+      - AE-X12BBAL
+      - AY-X12BBAL
+    - products:
+      - CMD211
+      - CRG14CL1N
+      - CRG14CL1NCMD
+
+
+
+
+
+
+
+  
