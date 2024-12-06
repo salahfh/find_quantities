@@ -3,11 +3,13 @@ import random
 import pytest
 
 from find_quantity.model import (
-    CannotCheckoutMoreThanStockQTException,
     Inventory,
     Sale,
     ShowRoom,
+)
+from find_quantity.models.product import(
     gen_test_product,
+    CannotCheckoutMoreThanStockQTException
 )
 
 

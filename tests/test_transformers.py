@@ -1,4 +1,5 @@
-from find_quantity.model import Product, Sale, gen_test_product
+from find_quantity.model import Product, Sale
+from find_quantity.models.product import gen_test_product
 from find_quantity.transformer_csv import MergeSplitProductsMixin
 
 
