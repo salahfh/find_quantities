@@ -2,10 +2,10 @@ ProductMergeRules:
   - rule: auto-merge -I and -O products
     command: AutoMergeIOProducts
 
-  - rule: auto-merge NCE***CMD
+  - rule: auto-merge NCE*** and NCE***CMD
     command: AutoMergeNCEProducts
 
-  - rule: auto-merge KCG***CMD
+  - rule: auto-merge KCG*** and KCG***CMD
     command: AutoMergeKCGProducts
 
   - rule: combine products
