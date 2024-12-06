@@ -1,7 +1,7 @@
 from hashlib import md5
 import copy
 from dataclasses import dataclass, field
-from typing import NewType
+from typing import NewType, Literal
 
 
 class CannotCheckoutMoreThanStockQTException(Exception):
@@ -47,7 +47,14 @@ class Product:
 
     def __hash__(self):
         return hash(self.n_article)
-
+    
+    def update_qt_stock(self, qt: int, operation: Literal['Checkout', 'Insert']='Checkout') -> None:
+        if operation == 'Checkout':
+            qt = -qt
+        if self.stock_qt + qt < 0:
+            raise CannotCheckoutMoreThanStockQTException
+        self.stock_qt += qt
+    
 
 @dataclass
 class Sale:
@@ -189,6 +196,19 @@ class Inventory:
             p.stock_qt = s.units_sold
             products.append(p)
         self.products = self._add_products(products=products)
+    
+    def __constuct_packages(self):
+        self.packages = []
+        pass
+
+    def __desolve_packages(self):
+        pass
+
+    def record_sale(self, qt: int, product: Product):
+        '''Create sale object and return them from here'''
+        '''Record a list of all sales made as well'''
+        self.global_sales = []
+        pass
 
 
 @dataclass
@@ -204,6 +224,8 @@ def gen_test_product(
     designation="test designation",
     stock_qt: int = 10,
     prix: float = 10,
+    rta = 0,
+    tee = 0,
     returned: bool = False,
 ):
     return Product(
@@ -212,6 +234,8 @@ def gen_test_product(
         groupe_code="",
         stock_qt=stock_qt,
         prix=prix,
+        rta=0,
+        tee=0,
         returned=returned,
     )
 
