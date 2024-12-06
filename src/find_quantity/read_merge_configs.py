@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass, field
 
-import yaml
+from find_quantity.commons import IOTools
 
 
 class Commands(Enum):
@@ -91,16 +91,10 @@ class PackageDefinitionsConstructor:
         return None
 
 
-# TODO: Move this to IOTools
-def read_merge_configs(path: Path):
-    with open(path) as f:
-        merge_configs = yaml.safe_load(f)
-    return merge_configs
-
-
-def parse_merge_configs(rules: dict) -> list[MergeRule]:
+@IOTools.from_yml()
+def parse_merge_configs(data: dict, path: Path) -> list[MergeRule]:
     parsed_rules = []
-    for rule in rules["ProductMergeRules"]:
+    for rule in data["ProductMergeRules"]:
         packages = rule.get("packages", [])
         for val in packages:
             products = val["products"]
@@ -195,8 +189,7 @@ if __name__ == "__main__":
     merge_configs_path = Path(
         r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
     )
-    configs = read_merge_configs(merge_configs_path)
-    rules = parse_merge_configs(configs)
+    rules = parse_merge_configs(path=merge_configs_path)
     for rule in rules:
         print(rule)
 

@@ -4,6 +4,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, Literal
 
+import yaml
+
 from find_quantity.configs import config
 
 
@@ -80,4 +82,20 @@ class IOTools:
 
             return wrapper
 
+        return decorated
+
+
+    # BUG: If you put path before data in the decorated function it'll crash
+
+    def from_yml(default_path: Path = None):
+        '''Read yaml file'''
+        def decorated(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                path = Path(choose_call_arg("path", func, kwargs, default_path))
+                with open(path, "r") as f:
+                    data = yaml.safe_load(f)
+                    return func(data, *args, **kwargs)
+
+            return wrapper
         return decorated
