@@ -1,3 +1,4 @@
+from pathlib import Path
 import copy
 
 from find_quantity.extract_csv import (
@@ -8,6 +9,7 @@ from find_quantity.extract_csv import (
     load_raw_file,
 )
 from find_quantity.configs import config
+from find_quantity.read_merge_configs import parse_merge_configs
 from find_quantity.model import Inventory, ShowRoom, Product, Sale
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
@@ -200,6 +202,21 @@ class SplitCombinedProductsCommand:
             split_values=[str(i) for i in range(1, last_month+1)],
         )
 
+class GeneratePackagesCommand:
+    def execute(self):
+        merge_configs_path = Path(
+            r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
+        )
+        merge_rules = parse_merge_configs(path=merge_configs_path)
+        products = extract_products(path=config.RAW_PRODUCTS_DATA)
+        for p_list in products.values():
+            print("**" * 20)
+            p_list = ProductTransformer(products=p_list).load()
+            inv = Inventory(products=p_list, merge_rules=merge_rules)
+            pkgs = inv.get_packages()
+            for pkg in pkgs:
+                print(pkg)
+
 
 if __name__ == "__main__":
-    c = SplitCombinedProductsCommand().execute()
+    c = GeneratePackagesCommand().execute()

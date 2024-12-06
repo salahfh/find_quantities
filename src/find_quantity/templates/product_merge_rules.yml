@@ -10,19 +10,11 @@ ProductMergeRules:
 
   - rule: combine products
     command: CombineProducts
-    packages: 
-    - products:
-      - AE-X12BBAL
-      - AY-X12BBAL
-    - products:
-      - CMD211
-      - CRG14CL1N
-      - CRG14CL1NCMD
-
-
-
-
-
-
-
-  
+    packages:
+      - products:
+          - AE-X12BBAL
+          - AY-X12BBAL
+      - products:
+          - CMD211
+          - CRG14CL1N
+          - CRG14CL1NCMD

@@ -2,6 +2,8 @@ import copy
 from dataclasses import dataclass
 
 from find_quantity.models.product import Product, CannotCheckoutMoreThanStockQTException
+from find_quantity.models.packages import Package, PackageConstractor
+from find_quantity.read_merge_configs import PackageDefinitionsConstructor, MergeRule
 
 
 @dataclass
@@ -24,9 +26,15 @@ class Sale:
 
 
 class Inventory:
-    def __init__(self, products: list[Product]):
+    def __init__(self,
+                 products: list[Product],
+                 merge_rules: list[MergeRule]=None):
+        # TODO: Delete later
+        if merge_rules is None:
+            merge_rules = []
         self.products: set[Product] = self._add_products(products)
         self._handle_returned_items()
+        self.packages: list[Package] = self.__constuct_packages(merge_rules)
 
     def _add_products(self, products: list[Product]):
         products_inv: set[Product] = set()
@@ -64,6 +72,11 @@ class Inventory:
             return self.products
         return tuple(p for p in self.products if p.stock_qt > 0)
 
+    def get_packages(self, all: bool = False) -> list[Package]:
+        if all:
+            return self.packages
+        return tuple(p for p in self.packages if p.stock_qt > 0)
+
     def add_products_from_sales(self, sales: list[Sale]) -> None:
         products = list()
         for s in sales:
@@ -72,9 +85,13 @@ class Inventory:
             products.append(p)
         self.products = self._add_products(products=products)
 
-    def __constuct_packages(self):
-        self.packages = []
-        pass
+    def __constuct_packages(self, merge_rules):
+        n_articles = [p.n_article for p in self.products]
+        package_definitions = PackageDefinitionsConstructor(merge_rules)\
+                .make_package_definitions(product_n_articles=n_articles)
+        pkc = PackageConstractor(products=self.products, package_definitions=package_definitions)
+        packages = pkc.construct_packages()
+        return packages
 
     def __desolve_packages(self):
         pass
@@ -83,4 +100,3 @@ class Inventory:
         """Create sale object and return them from here"""
         """Record a list of all sales made as well"""
         self.global_sales = []
-        pass

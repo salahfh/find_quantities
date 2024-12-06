@@ -63,6 +63,11 @@ class PackageConstractor:
             if not self.allow_incomplete_packages:
                 if len(pkd) != len(prods):
                     continue
+            
+            # in case of no product matching package definition is found
+            # This is the case of product with zero stock
+            if not prods:
+                continue
 
             stock_lmt = min([p.stock_qt for p in prods])
             self.deduct_allocated_stock(allocated_products=prods, qt=stock_lmt)
