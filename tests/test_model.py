@@ -49,6 +49,27 @@ class TestProduct:
         s = set([p1, p2])
         assert len(s) == 2
 
+    def test_product_quantity_update_checkout(self):
+        p1 = gen_test_product(stock_qt=10)
+
+        p1.update_qt_stock(qt=8, operation='Checkout')
+
+        assert p1.stock_qt == 2
+
+    def test_product_quantity_update_insert(self):
+        p1 = gen_test_product(stock_qt=10)
+
+        p1.update_qt_stock(qt=8, operation='Insert')
+
+        assert p1.stock_qt == 18
+
+    def test_product_quantity_update_checkout_more_than_limit(self):
+        p1 = gen_test_product(stock_qt=10)
+
+        with pytest.raises(CannotCheckoutMoreThanStockQTException):
+            p1.update_qt_stock(qt=18, operation='Checkout')
+
+
 
 class TestInvetory:
     def test_inventory(self):

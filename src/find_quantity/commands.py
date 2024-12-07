@@ -19,6 +19,10 @@ from find_quantity.transformer_csv import (
     MergeSplitProductsMixin,
 )
 
+MERGE_CONFIG_PATH = Path(
+    r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
+)
+
 
 class SetupFolderStructure:
     def execute(self) -> None:
@@ -59,17 +63,18 @@ class ProcessFilesCommand:
                 products.values()
         ):
             p_transfomer = ProductTransformer(products=p_list)
-            p_list = p_transfomer.transform()
-            p_merged = p_transfomer.get_merged_products()
+            p_list = p_transfomer.load()
+            # p_merged = p_transfomer.get_merged_products()
             s_list = ShowroomTransformer(showrooms=s_list).transform()
             report.write_product_transformed(month=month, products=p_list)
             report.write_showroom_transformed(month=month, showrooms=s_list)
-            report.write_merged_products(month=month, merged_products=p_merged)
+            # report.write_merged_products(month=month, merged_products=p_merged)
 
 
 class CalculateQuantitiesCommand:
     def execute(self):
         report = Report(output_folder=config.STEP_TWO_CALCULATE_PATH)
+        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
         p_list_all = extract_products(
             path=config.STEP_ONE_TRANSFORM_PATH / "products_transformed.csv"
         )
@@ -81,7 +86,7 @@ class CalculateQuantitiesCommand:
         ):
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
-            inv = Inventory(products=products)
+            inv = Inventory(products=products, merge_rules=merge_rules)
             solver = Solver()
 
             # Filter showrooms with zero sales
@@ -101,8 +106,8 @@ class CalculateQuantitiesCommand:
                 products=inv.get_products(), month=month, filename_prefix="_remaining"
             )
 
-            # Single Showrooms - Recreate new products list
-            inv = Inventory(products=[])
+            # # Single Showrooms - Recreate new products list
+            inv = Inventory(products=[], merge_rules=merge_rules)
             inv.add_products_from_sales(monthly_showroom.sales)
             last_showroom = showrooms[-1]
             for sh in showrooms:
@@ -204,10 +209,7 @@ class SplitCombinedProductsCommand:
 
 class GeneratePackagesCommand:
     def execute(self):
-        merge_configs_path = Path(
-            r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
-        )
-        merge_rules = parse_merge_configs(path=merge_configs_path)
+        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
         products = extract_products(path=config.RAW_PRODUCTS_DATA)
         for p_list in products.values():
             print("**" * 20)
@@ -219,4 +221,5 @@ class GeneratePackagesCommand:
 
 
 if __name__ == "__main__":
-    c = GeneratePackagesCommand().execute()
+    # c = GeneratePackagesCommand().execute()
+    c = CalculateQuantitiesCommand().execute()

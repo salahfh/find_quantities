@@ -43,29 +43,26 @@ class Solver:
     ) -> list[Sale]:
         difference = target_amount
         notsolved = True
-        all_sales = []
+        sales = []
         while notsolved:
-            sales = []
-            products = inventory.get_products()
+            packages = inventory.get_packages()
             product_percentage += 0.001
-            for p in products:
+            for p in packages:
                 max_product = self.determine_max_product(product_percentage, p)
                 for q in range(max_product, 0, -1):
                     total = q * p.prix
                     if (difference - total) >= 0:
-                        s = Sale(product=p, units_sold=q)
                         difference -= total
-                        sales.append(s)
+                        s = inventory.record_sale(package=p, qt=q)
+                        sales += s
                         break
                 if difference <= 0:
                     notsolved = False
                     break
-            if len(products) == 0 or attempts < 0:
+            if len(packages) == 0 or attempts < 0:
                 break
-            inventory.update_quantities(sales=sales)
             attempts -= 1
-            all_sales += sales
-        return all_sales
+        return sales
 
     distribute_products_by_showroom = partialmethod(
         distrubute_maximum_of_all_products, product_percentage=0.1, attempts=100

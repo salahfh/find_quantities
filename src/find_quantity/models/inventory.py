@@ -32,9 +32,10 @@ class Inventory:
         # TODO: Delete later
         if merge_rules is None:
             merge_rules = []
+        self.merge_rules = merge_rules
         self.products: set[Product] = self._add_products(products)
         self._handle_returned_items()
-        self.packages: list[Package] = self.__constuct_packages(merge_rules)
+        self.packages: list[Package] = self.__constuct_packages()
 
     def _add_products(self, products: list[Product]):
         products_inv: set[Product] = set()
@@ -84,19 +85,24 @@ class Inventory:
             p.stock_qt = s.units_sold
             products.append(p)
         self.products = self._add_products(products=products)
+        self.packages: list[Package] = self.__constuct_packages()
 
-    def __constuct_packages(self, merge_rules):
+    def __constuct_packages(self):
         n_articles = [p.n_article for p in self.products]
-        package_definitions = PackageDefinitionsConstructor(merge_rules)\
+        package_definitions = PackageDefinitionsConstructor(self.merge_rules)\
                 .make_package_definitions(product_n_articles=n_articles)
         pkc = PackageConstractor(products=self.products, package_definitions=package_definitions)
         packages = pkc.construct_packages()
         return packages
 
-    def __desolve_packages(self):
-        pass
-
-    def record_sale(self, qt: int, product: Product):
+    def record_sale(self, qt: int, package: Package) -> list[Sale]:
         """Create sale object and return them from here"""
-        """Record a list of all sales made as well"""
-        self.global_sales = []
+        sales = []
+        package.update_qt_stock(qt=qt, operation='Checkout')
+        for product in package.sub_products:
+            s = Sale(
+                product=product,
+                units_sold=qt,
+            )
+            sales.append(s)
+        return sales

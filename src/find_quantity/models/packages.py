@@ -1,5 +1,5 @@
 from typing import Literal
-from find_quantity.models.product import Product
+from find_quantity.models.product import Product, CannotCheckoutMoreThanStockQTException
 
 
 ALLOW_INCOMPLETE_PACKAGES = True
@@ -17,13 +17,22 @@ class Package:
         self.sub_products = sub_products
         self.n_article = n_article
         self.stock_qt = stock_lmt
+        self.prix = sum([p.prix for p in self.sub_products])
 
     def update_qt_stock(
         self, qt: int, operation: Literal["Checkout", "Insert"] = "Checkout"
     ) -> None:
         for p in self.sub_products:
-            p.update_qt_stock(qt, operation)
-
+            try:
+                p.update_qt_stock(qt, operation)
+            except CannotCheckoutMoreThanStockQTException:
+                print()
+                print(f"Request qt: {qt}")
+                print(f"Package: {self} and stock: {self.stock_qt}")
+                print(f"Products: {self.sub_products} and min stock: {min([p.stock_qt for p in self.sub_products])}")
+                print(f"Products stock, Initials stocks: {[(p.stock_qt, p.stock_qt_intial) for p in self.sub_products]}")
+        self.stock_qt -= qt
+    
     def __repr__(self):
         return f"Package {self.n_article} ({self.stock_qt} Units | {[p.n_article for p in self.sub_products]})"
 
@@ -55,24 +64,24 @@ class PackageConstractor:
     def construct_packages(self) -> list[Package]:
         packages = []
         for i, pkd in enumerate(self.package_definitions):
-            prods: list[Product] = []
+            sub_products: list[Product] = []
             for defin in pkd:
                 for p in self.get_products():
                     if p.n_article == defin:
-                        prods.append(p)
+                        sub_products.append(p)
             if not self.allow_incomplete_packages:
-                if len(pkd) != len(prods):
+                if len(pkd) != len(sub_products):
                     continue
             
             # in case of no product matching package definition is found
             # This is the case of product with zero stock
-            if not prods:
+            if not sub_products:
                 continue
 
-            stock_lmt = min([p.stock_qt for p in prods])
-            self.deduct_allocated_stock(allocated_products=prods, qt=stock_lmt)
+            stock_lmt = min([min(p.stock_qt, self.products[p]) for p in sub_products])
+            self.deduct_allocated_stock(allocated_products=sub_products, qt=stock_lmt)
 
-            pk = Package(sub_products=prods, n_article=f"PKG-{i}", stock_lmt=stock_lmt)
+            pk = Package(sub_products=sub_products, n_article=f"PKG-{i}", stock_lmt=stock_lmt)
             packages.append(pk)
 
         # left over products are created into seperate packages

@@ -1,5 +1,5 @@
 from find_quantity.models.product import gen_test_product
-from find_quantity.models.packages import PackageConstractor
+from find_quantity.models.packages import PackageConstractor, Package
 
 
 
@@ -118,3 +118,28 @@ def test_pacakges_with_no_package_rules_defined():
         products, package_definitions, allow_incomplete_packages=True
     ).construct_packages()
     assert len(pks) == 5
+
+def test_package_quantities_in_of_split_products():
+    package_definitions = [ ]
+    p1 = gen_test_product(
+        n_article="AY-X12BBAL",
+        stock_qt=10
+    )
+    p2 = gen_test_product(
+        n_article="AE-X12BBAL",
+        stock_qt=20
+    )
+    products = [p1, p2]
+    
+    pk1 = Package(sub_products=products, stock_lmt=10, n_article='PKG-0')
+    pk2 = Package(sub_products=[p2], stock_lmt=10, n_article='PKG-AY-X12BBAL')
+
+    pks = PackageConstractor(
+        products, package_definitions, allow_incomplete_packages=True
+    ).construct_packages()
+    assert len(pks) == 2
+    for pk in pks:
+        if pk is pk1:
+            assert pk.stock_qt == 10
+        if pk is pk2:
+            assert pk.stock_qt == 10
