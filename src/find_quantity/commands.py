@@ -1,21 +1,16 @@
-import copy
-
 from find_quantity.extract_csv import (
     extract_calculation_report,
     extract_products,
     extract_showrooms,
-    load_merged_products,
-    load_raw_file,
 )
 from find_quantity.configs import config
 from find_quantity.read_merge_configs import parse_merge_configs
-from find_quantity.model import Inventory, ShowRoom, Product, Sale
+from find_quantity.model import Inventory, ShowRoom
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
 from find_quantity.transformer_csv import (
     ProductTransformer,
     ShowroomTransformer,
-    MergeSplitProductsMixin,
 )
 
 
@@ -64,11 +59,9 @@ class ProcessFilesCommand:
         ):
             p_transfomer = ProductTransformer(products=p_list)
             p_list = p_transfomer.load()
-            # p_merged = p_transfomer.get_merged_products()
             s_list = ShowroomTransformer(showrooms=s_list).transform()
             report.write_product_transformed(month=month, products=p_list)
             report.write_showroom_transformed(month=month, showrooms=s_list)
-            # report.write_merged_products(month=month, merged_products=p_merged)
 
 
 class CalculateQuantitiesCommand:
@@ -153,72 +146,6 @@ class DevideProductTo26Days:
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
             print()
-
-
-class SplitCombinedProductsCommand:
-    def execute(self):
-        print("Splitting combined products and fixing returned items.")
-        report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
-        merged_products = load_merged_products(
-            path=config.STEP_ONE_TRANSFORM_PATH / "merged_product.csv"
-        )
-        final_report = load_raw_file(
-            path=config.STEP_THREE_VALIDATE_PATH / "daily_sales.csv"
-        )
-        p_transfomer = MergeSplitProductsMixin(products=[])
-        data = []
-        for line in final_report:
-            # Handle returned products
-            if float(line["prix"]) < 0:
-                line["prix"] = float(line["prix"]) * -1
-                line["Units_sold"] = float(line["Units_sold"]) * -1
-            stem = p_transfomer._find_product_stem(line["n_article"], prefix=["-C"])
-            if stem:
-                # Split Merged Products
-                pc = Product(
-                    n_article=line["n_article"],
-                    designation=line["designation"],
-                    groupe_code=line["groupe_code"],
-                    prix=float(line["prix"]),
-                    stock_qt=int(line["Units_sold"]),
-                    tee=float(line["TEE"]),
-                    rta=float(line["RTA"]),
-                )
-                code = (line["mois"], stem)
-                for i in [1, 2]:
-                    p = copy.copy(pc)
-                    line = copy.copy(line)
-                    p.n_article = merged_products[code][f"p{i}_n_article"]
-                    p.designation = merged_products[code][f"p{i}_designation"]
-                    p.prix = float(merged_products[code][f"p{i}_prix"])
-                    sale = Sale(product=p, units_sold=p.stock_qt)
-
-                    line["n_article"] = p.n_article
-                    line["designation"] = p.designation
-                    line["prix"] = p.prix
-                    line["Total"] = sale.sale_total_amount
-                    line["Total TTC"] = sale.total_ttc
-                    data.append(line)
-                continue
-            data.append(line)
-        last_month = int(line['mois'])
-        report.write_generic_list_of_dicts(
-            ld=data,
-            filename="final_daily_sales",
-            split_values=[str(i) for i in range(1, last_month+1)],
-        )
-
-class GeneratePackagesCommand:
-    def execute(self):
-        merge_rules = parse_merge_configs(path=config.MERGE_CONFIG_PATH)
-        products = extract_products(path=config.RAW_PRODUCTS_DATA)
-        for p_list in products.values():
-            print("**" * 20)
-            p_list = ProductTransformer(products=p_list).load()
-            inv = Inventory(products=p_list, merge_rules=merge_rules)
-            pkgs = inv.get_packages()
-            for pkg in pkgs:
-                print(pkg)
 
 
 if __name__ == "__main__":

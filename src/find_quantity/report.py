@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from find_quantity.commons import IOTools
-from find_quantity.model import MergedProduct, Product, ShowRoom
+from find_quantity.model import Product, ShowRoom
 from find_quantity.solver import Metrics
 
 
@@ -143,36 +143,6 @@ class Report:
                 metrics.ratio,
                 metrics.num_products_used,
             )
-        ]
-        return path, header, data
-
-    @IOTools.to_csv(mode="a")
-    def write_merged_products(
-        self, month: int, merged_products: list[MergedProduct]
-    ) -> None:
-        path = self.output_folder / "merged_product.csv"
-        header = [
-            "mois",
-            "code",
-            "p1_n_article",
-            "p1_designation",
-            "p1_prix",
-            "p2_n_article",
-            "p2_designation",
-            "p2_prix",
-        ]
-        data = [
-            (
-                month,
-                ps.code,
-                ps.p_I.n_article,
-                ps.p_I.designation,
-                ps.p_I.prix,
-                ps.p_O.n_article,
-                ps.p_O.designation,
-                ps.p_O.prix,
-            )
-            for ps in merged_products
         ]
         return path, header, data
 
