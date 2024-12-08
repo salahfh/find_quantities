@@ -24,14 +24,22 @@ class Sale:
     def total_ttc(self) -> float:
         return self.product.prix_ttc * self.units_sold
 
+    @property
+    def corrected_unit_sold(self):
+        '''
+        TEMPORARY FIX:
+        This hacky fix to show negative quantity for returned products in the reports. 
+        It should be handled at the level of the inventory class
+        '''
+        if self.product.prix < 0:
+            return -1 * self.units_sold
+        return self.units_sold
 
 class Inventory:
     def __init__(self,
                  products: list[Product],
-                 merge_rules: list[MergeRule]=None):
-        # TODO: Delete later
-        if merge_rules is None:
-            merge_rules = []
+                 merge_rules: list[MergeRule],
+                 ):
         self.merge_rules = merge_rules
         self.products: set[Product] = self._add_products(products)
         self._handle_returned_items()

@@ -53,8 +53,7 @@ class Solver:
                     total = q * p.prix
                     if (difference - total) >= 0:
                         difference -= total
-                        s = inventory.record_sale(package=p, qt=q)
-                        sales += s
+                        sales += inventory.record_sale(package=p, qt=q)
                         break
                 if difference <= 0:
                     notsolved = False
@@ -76,15 +75,19 @@ class Solver:
         return max_product
 
     def allocate_remaining_products(self, inventory: Inventory) -> list[Sale]:
-        products = inventory.get_products()
+        '''
+        Distribute remaining products/packages so all product will be used.
+        '''
+        packages = inventory.get_packages()
         sales = []
-        for p in products:
-            s = Sale(product=p, units_sold=p.stock_qt)
-            sales.append(s)
-        inventory.update_quantities(sales=sales)
+        for p in packages:
+            sales += inventory.record_sale(qt=p.stock_qt, package=p)
         return sales
 
     def generate_equal_qt(self, n: int, summ: int) -> list[int]:
+        '''
+        Generate a list of quantities in shuffled order.
+        '''
         q, r = divmod(summ, n)
         qt = [q for _ in range(n)]
         for i in range(len(qt)):
@@ -92,19 +95,21 @@ class Solver:
             if r < 0:
                 break
             qt[i] += 1
-        # random.shuffle(qt)
         return qt
 
     def distrubute_products_equally(
         self, inventory: Inventory, n: int
     ) -> list[list[Sale]]:
-        products = inventory.get_packages()
+        '''
+        Distrute packages equally on N customers. Also it shuffles them before generating the sales.
+        It purpose to make it look credible that products are distrubted in a randomized manner.
+        '''
+        packages = inventory.get_packages()
         sales = defaultdict(list)
-        for p in products:
-            sl = [
-                inventory.record_sale(package=p, qt=q)
-                for q in self.generate_equal_qt(n=n, summ=p.stock_qt)
-            ]
+        for p in packages:
+            sl = [(p, q) for q in self.generate_equal_qt(n=n, summ=p.stock_qt)]
+            random.shuffle(sl)
+            sl = [inventory.record_sale(package=p, qt=q) for p, q in sl]
             for i, s in enumerate(sl):
                 sales[i] += s
         return sales.values()

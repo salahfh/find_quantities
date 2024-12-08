@@ -127,6 +127,7 @@ class DevideProductTo26Days:
     def execute(self):
         solver = Solver()
         report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
+        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
         calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
             path=config.STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
         )
@@ -135,7 +136,7 @@ class DevideProductTo26Days:
             for sh in showrooms.values():
                 # Devide to 26 days
                 print(".", end="")
-                inv = Inventory(products=[])
+                inv = Inventory(products=[], merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
                 for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
@@ -144,7 +145,7 @@ class DevideProductTo26Days:
                 # Split by client
                 for day in sh.daily_sales:
                     customers = day.total_units_sold
-                    inv = Inventory(products=[])
+                    inv = Inventory(products=[], merge_rules=merge_rules)
                     inv.add_products_from_sales(day.sales)
                     sales_per_customer = solver.distrubute_products_equally(
                         inv, customers
@@ -222,5 +223,5 @@ class GeneratePackagesCommand:
 
 if __name__ == "__main__":
     # c = GeneratePackagesCommand().execute()
-    c = CalculateQuantitiesCommand().execute()
+    # c = CalculateQuantitiesCommand().execute()
     c = DevideProductTo26Days().execute()

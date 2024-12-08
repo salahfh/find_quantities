@@ -27,6 +27,15 @@ class Product:
         m_tva = (self.prix + m_tee) * self.tva
         return round(self.prix + m_tee + m_tva + self.rta, 2)
 
+    @property
+    def corrected_prix(self):
+        '''
+        TEMPORARY FIX:
+        This hacky fix to show positive prices in the reports. 
+        It should be handled at the level of the inventory class
+        '''
+        return abs(self.prix)
+
     def __str__(self):
         return f"Produit {self.n_article} ({self.prix} DZD | {self.stock_qt} Units)"
 

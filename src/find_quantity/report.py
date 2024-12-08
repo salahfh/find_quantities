@@ -206,11 +206,11 @@ class Report:
                 pur.product.n_article,
                 pur.product.designation,
                 pur.product.groupe_code,
-                pur.product.prix,
+                pur.product.corrected_prix,
                 pur.product.rta,
                 pur.product.tee,
                 pur.product.tva,
-                pur.units_sold,
+                pur.corrected_unit_sold,
                 pur.sale_total_amount,
                 pur.total_ttc,
             )
