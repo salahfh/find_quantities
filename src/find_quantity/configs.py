@@ -15,6 +15,7 @@ class Config:
     CLEAN_BEFORE_EACH_RUN: bool = True
     CSV_SEPERATOR: str = ';'
     DAYS: int = 26
+    YEAR: int = 2023        # TODO ADD CMD arg to change it
 
     def create_folders(self):
         for attr in fields(self):

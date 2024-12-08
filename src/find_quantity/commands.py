@@ -37,7 +37,7 @@ class SetupFolderStructure:
             quit_ = True
 
         if not config.MERGE_CONFIG_PATH.exists():
-            print(f"The {config.MERGE_CONFIG_PATH.name} has been created.")
+            print(f"\nThe {config.MERGE_CONFIG_PATH.name} has been created.")
             config.copy_merge_configs()
 
 
@@ -133,7 +133,7 @@ class DevideProductTo26Days:
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
                 for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
-                    sh.add_daily_sales(day=day, sales=sales)
+                    sh.add_daily_sales(day=day, month=month, year=config.YEAR, sales=sales)
 
                 # Split by client
                 for day in sh.daily_sales:

@@ -152,6 +152,7 @@ class Report:
         header = [
             "mois",
             "showroom",
+            "date",
             "day",
             "c_id",
             "customer_id",
@@ -170,6 +171,7 @@ class Report:
             (
                 month,
                 showroom.refrence,
+                d.calendar_date,
                 d.day,
                 c.id,
                 c.get_uniq_id(month, d.day, showroom.refrence),

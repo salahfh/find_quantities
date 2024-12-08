@@ -1,6 +1,7 @@
 from typing import NewType
 from hashlib import md5
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from find_quantity.models.inventory import Sale
 
@@ -23,6 +24,7 @@ class Customer:
 class DailySale:
     day: int
     sales: list[Sale]
+    calendar_date: datetime
     customers: list[Customer] = field(default_factory=list)
 
     @property
@@ -74,9 +76,31 @@ class ShowRoom:
         for s in sales:
             self.add_sale(s)
 
-    def add_daily_sales(self, day: int, sales: list[Sale]) -> None:
-        self.daily_sales.append(DailySale(day=day, sales=sales))
+    def add_daily_sales(self, day: int, month: int, year: int, sales: list[Sale]) -> None:
+        calendar_date = DateUtils.get_non_friday_date(month, day, year)
+        self.daily_sales.append(
+            DailySale(
+                day=day, 
+                calendar_date=calendar_date,
+                sales=sales
+            ))
 
     @property
     def calculated_total_sales(self) -> bool:
         return sum(s.sale_total_amount for s in self.sales)
+
+
+class DateUtils:
+    '''Some Basic date utilities'''
+
+    @classmethod
+    def is_it_friday(cls, dt: datetime) -> bool:
+        FRIDAY = 4
+        return dt.weekday() == FRIDAY
+    
+    @classmethod
+    def get_non_friday_date(cls, month: int, day: int, year: int=2023):
+        dt = datetime(int(year), int(month), int(day))
+        if DateUtils.is_it_friday(dt):
+            return DateUtils.get_non_friday_date(month, day+1, year)
+        return dt.date().strftime("%Y-%m-%d")
