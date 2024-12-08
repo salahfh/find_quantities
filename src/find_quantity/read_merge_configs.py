@@ -11,6 +11,7 @@ class Commands(Enum):
     AutoMergeIOProducts = "AutoMergeIOProducts"
     AutoMergeNCEProducts = "AutoMergeNCEProducts"
     AutoMergeKCGProducts = "AutoMergeKCGProducts"
+    MergeBasedOnPattern = "MergeBasedOnPattern"
     CombineProducts = "CombineProducts"
 
 
@@ -18,6 +19,7 @@ class Commands(Enum):
 class MergeRule:
     name: str
     command: str
+    pattern: str = None
     products: list = field(default_factory=list)
 
     def __post_init__(self):
@@ -58,6 +60,9 @@ class PackageDefinitionsConstructor:
                     pkgs = self.merge_based_on_pattern(product_n_articles, pattern=r'^KCG\d{3}')
                 case Commands.CombineProducts:
                     pkgs = self.merge_products_from_predefine_list(merge_rule.products)
+                case Commands.MergeBasedOnPattern:
+                    pkgs = self.merge_based_on_pattern_with_product_crossing(
+                        product_n_articles, pattern=merge_rule.pattern, cross_prod=merge_rule.products)
             packages.update(pkgs)
 
         # generate single packages for all products.
@@ -81,6 +86,17 @@ class PackageDefinitionsConstructor:
                 matches[match.group()].append(n_art)
         return tuple({tuple(v) for v in matches.values()}, )
     
+    def merge_based_on_pattern_with_product_crossing(self,
+                                                     product_n_articles: list[str],
+                                                     pattern: str,
+                                                     cross_prod: list[str]) -> list[list[str]]:
+        matches = self.merge_based_on_pattern(product_n_articles=product_n_articles, pattern=pattern)
+        cross_matches: list[tuple] = list()
+        for m in matches: 
+            m = tuple(list(m) + [p for p in cross_prod])
+            cross_matches.append(m)
+        return cross_matches
+
     def merge_products_from_predefine_list(self, product_n_articles: list[str]) -> list[list[str]]:
         return tuple(product_n_articles),
 
@@ -101,6 +117,7 @@ def parse_merge_configs(data: dict, path: Path) -> list[MergeRule]:
             r = MergeRule(
                 name=rule["rule"],
                 command=rule["command"],
+                pattern=rule.get("pattern", None),
                 products=products,
             )
             parsed_rules.append(r)
@@ -113,10 +130,12 @@ def parse_merge_configs(data: dict, path: Path) -> list[MergeRule]:
     return parsed_rules
 
 
+
 if __name__ == "__main__":
     merge_configs_path = Path(
-        r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
+        r"C:\Users\saousa\Scripts\MustafaAcc\templates\product_merge_rules.yml"
     )
     rules = parse_merge_configs(path=merge_configs_path)
     for rule in rules:
         print(rule)
+

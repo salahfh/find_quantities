@@ -2,11 +2,23 @@ ProductMergeRules:
   - rule: auto-merge -I and -O products
     command: AutoMergeIOProducts
 
-  - rule: auto-merge NCE*** and NCE***CMD
-    command: AutoMergeNCEProducts
+  - rule: auto-merge NCE with CMD
+    command: MergeBasedOnPattern
+    pattern: '^(NCE)\d{3}.*'
+    packages:
+      - products:
+          - CMD211
+      - products:
+          - CMD300
 
-  - rule: auto-merge KCG*** and KCG***CMD
-    command: AutoMergeKCGProducts
+  - rule: auto-merge KCG with CMD
+    command: MergeBasedOnPattern
+    pattern: '^(KCG)\d{3}.*'
+    packages:
+      - products:
+          - CMD211
+      - products:
+          - CMD300
 
   - rule: combine products
     command: CombineProducts
@@ -17,4 +29,6 @@ ProductMergeRules:
       - products:
           - CMD211
           - CRG14CL1N
-          - CRG14CL1NCMD
+      - products:
+          - CMD211
+          - CRG-CP1000G

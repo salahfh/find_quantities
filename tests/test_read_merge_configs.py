@@ -37,6 +37,27 @@ def test_merged_product_names_with_pattern():
     assert len(package_definitions) == 2
 
 
+def test_merged_product_names_with_pattern_and_package_crossing():
+    package_names = [
+        'NCE185',
+        'NCE150',
+        'NCE1100',
+        'KCG406',
+    ]
+    pattern = "^NCE\\d{3}.*"
+    cross_product = ['CMD211']
+
+    pdc = PackageDefinitionsConstructor(merge_rules=[])
+    package_definitions = pdc.merge_based_on_pattern_with_product_crossing(
+        product_n_articles=package_names,
+        pattern=pattern,
+        cross_prod=cross_product,
+    )
+
+    assert len(package_definitions) == 3
+    assert all([len(packages_in_def) == 2 for packages_in_def in package_definitions])
+
+
 def test_merge_products_defined_in_custom_list():
     package_names = [
         'NCE185',
