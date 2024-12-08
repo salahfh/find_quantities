@@ -1,5 +1,6 @@
 from dataclasses import dataclass, fields
 from pathlib import Path
+import shutil
 
 
 @dataclass
@@ -10,6 +11,7 @@ class Config:
     STEP_ONE_TRANSFORM_PATH: Path = PROJECT_FOLDER / "output" / "1-Transform"
     STEP_TWO_CALCULATE_PATH: Path = PROJECT_FOLDER / "output" / "2-Calculate"
     STEP_THREE_VALIDATE_PATH: Path = PROJECT_FOLDER / "output" / "3-Validate"
+    MERGE_CONFIG_PATH: Path = PROJECT_FOLDER / 'product_merge_rules.yml'
     CLEAN_BEFORE_EACH_RUN: bool = True
     CSV_SEPERATOR: str = ';'
     DAYS: int = 26
@@ -30,6 +32,12 @@ class Config:
         ]:
             if dir.exists():
                 [f.unlink() for f in dir.glob("*")]
+    
+    def copy_merge_configs(self):
+        if not self.MERGE_CONFIG_PATH.exists():
+            shutil.copy(
+                r"templates\product_merge_rules.yml",
+                self.MERGE_CONFIG_PATH)
 
 
 config = Config()

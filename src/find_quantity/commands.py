@@ -1,4 +1,3 @@
-from pathlib import Path
 import copy
 
 from find_quantity.extract_csv import (
@@ -17,10 +16,6 @@ from find_quantity.transformer_csv import (
     ProductTransformer,
     ShowroomTransformer,
     MergeSplitProductsMixin,
-)
-
-MERGE_CONFIG_PATH = Path(
-    r"C:\Users\saousa\Scripts\MustafaAcc\src\find_quantity\templates\product_merge_rules.yml"
 )
 
 
@@ -45,6 +40,11 @@ class SetupFolderStructure:
             print(message.format(config.RAW_SHOWROOMS_DATA, config.PROJECT_FOLDER))
             report.write_showroom_input_template_file(path=config.RAW_SHOWROOMS_DATA)
             quit_ = True
+
+        if not config.MERGE_CONFIG_PATH.exists():
+            print(f"The {config.MERGE_CONFIG_PATH.name} has been created.")
+            config.copy_merge_configs()
+
 
         if quit_:
             exit(0)
@@ -74,7 +74,7 @@ class ProcessFilesCommand:
 class CalculateQuantitiesCommand:
     def execute(self):
         report = Report(output_folder=config.STEP_TWO_CALCULATE_PATH)
-        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
+        merge_rules = parse_merge_configs(path=config.MERGE_CONFIG_PATH)
         p_list_all = extract_products(
             path=config.STEP_ONE_TRANSFORM_PATH / "products_transformed.csv"
         )
@@ -127,7 +127,7 @@ class DevideProductTo26Days:
     def execute(self):
         solver = Solver()
         report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
-        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
+        merge_rules = parse_merge_configs(path=config.MERGE_CONFIG_PATH)
         calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
             path=config.STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
         )
@@ -210,7 +210,7 @@ class SplitCombinedProductsCommand:
 
 class GeneratePackagesCommand:
     def execute(self):
-        merge_rules = parse_merge_configs(path=MERGE_CONFIG_PATH)
+        merge_rules = parse_merge_configs(path=config.MERGE_CONFIG_PATH)
         products = extract_products(path=config.RAW_PRODUCTS_DATA)
         for p_list in products.values():
             print("**" * 20)
