@@ -223,3 +223,4 @@ class GeneratePackagesCommand:
 if __name__ == "__main__":
     # c = GeneratePackagesCommand().execute()
     c = CalculateQuantitiesCommand().execute()
+    c = DevideProductTo26Days().execute()

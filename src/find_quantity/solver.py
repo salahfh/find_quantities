@@ -92,21 +92,21 @@ class Solver:
             if r < 0:
                 break
             qt[i] += 1
-        random.shuffle(qt)
+        # random.shuffle(qt)
         return qt
 
     def distrubute_products_equally(
         self, inventory: Inventory, n: int
     ) -> list[list[Sale]]:
-        products = inventory.get_products()
+        products = inventory.get_packages()
         sales = defaultdict(list)
         for p in products:
             sl = [
-                Sale(product=p, units_sold=q)
+                inventory.record_sale(package=p, qt=q)
                 for q in self.generate_equal_qt(n=n, summ=p.stock_qt)
             ]
-            [sales[i].append(s) for i, s in enumerate(sl)]
-            inventory.update_quantities(sales=[Sale(product=p, units_sold=p.stock_qt)])
+            for i, s in enumerate(sl):
+                sales[i] += s
         return sales.values()
 
 
