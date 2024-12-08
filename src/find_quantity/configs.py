@@ -34,9 +34,10 @@ class Config:
                 [f.unlink() for f in dir.glob("*")]
     
     def copy_merge_configs(self):
+        config_template_path = Path(__file__).parents[2] / r"templates/product_merge_rules.yml"
         if not self.MERGE_CONFIG_PATH.exists():
             shutil.copy(
-                r"templates\product_merge_rules.yml",
+                config_template_path,
                 self.MERGE_CONFIG_PATH)
 
 
