@@ -17,6 +17,16 @@ Follow the steps to install the software
 * Install package from repo: `pip install git+https://github.com/salahfh/find_quantities.git`
 
 
+## Update
+With the new version, run `find_quantity -u` to automatically update. 
+
+Alternatively, manual updating is supported via the steps below:
+* Open `PowerShell` from windows start menu
+* Change to the folder `cd bin`
+* Activate the virtual enviroment `.\venv\Scripts\activate`
+* Run the command to update: `pip install git+https://github.com/salahfh/find_quantities.git`
+
+
 ## Usage
 To use the program follow these steps below
 * Open a `PowerShell` window from windows start menu
@@ -32,30 +42,21 @@ To use the program follow these steps below
 * `-y YEAR`: specify the year of the data for the final date generation. The default is 2023.
 
 
-## Update
-With the new version, run `find_quantity -u` to automatically update. 
-
-Alternatively, manual updating is supported via the steps below:
-* Open `PowerShell` from windows start menu
-* Change to the folder `cd bin`
-* Activate the virtual enviroment `.\venv\Scripts\activate`
-* Run the command to update: `pip install git+https://github.com/salahfh/find_quantities.git`
-
-
 ## Merge Rules
 The program offer different ways to merge the products together as package. A template file is automatically 
-create at the start of new project. In order to with the config `merge_product_rules.yml` few rules to keep in mind: 
-* The YAML (`.yml`) is sensitve to indentations and white space. 
+created at the start of new project. In order to work effectively with the config `merge_product_rules.yml`,
+there  are few rules to keep in mind: 
+* The YAML (`.yml`) is sensitve to indentations and white spaces.
 * The structure of the file sections must be followed as specified in the default template. 
 * The available commads are: 
-    1. `AutoMergeIOProducts`: this one for auto merging all products tags (`n_article`) ending with `-I` or `-O` 
-    2. `CombineProducts`: take a list of products under the section `packages` and merge them together
-    3. `MergeBasedOnPattern`: search the package matching the regex `pattern` and combines them along with 
-        the `products` section under `packages`. Multiple packages can be defined at the same time. 
+    1. `AutoMergeIOProducts`: auto merge all products tags (`n_article`) ending with `-I` or `-O` 
+    2. `CombineProducts`: takes a list of products under the section `packages` and merge them together
+    3. `MergeBasedOnPattern`: search for products tags (`n_article`) matching the regex `pattern` and
+       combines them with the `products` section under `packages`. Multiple `packages` with one or 
+        more `products` can be defined at the same time. 
 
-**WARNING**: Special attention must be paid to the `pattern` avoid matching against the wrong package. For pattern
-testing, the website [regex](https://regexr.com/) is highly recommanded. 
-
+**WARNING**: Special attention must be paid to the `pattern` to avoid matching against the wrong products. 
+For pattern testing, the website [regex](https://regexr.com/) is very useful.
 
 
 
