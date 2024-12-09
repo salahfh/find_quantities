@@ -45,3 +45,4 @@ class Config:
 
 
 config = Config()
+config.copy_merge_configs()
