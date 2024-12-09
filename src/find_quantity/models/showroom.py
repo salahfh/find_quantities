@@ -1,10 +1,9 @@
-from typing import NewType
-from hashlib import md5
 from dataclasses import dataclass, field
 from datetime import datetime
+from hashlib import md5
+from typing import NewType
 
 from find_quantity.models.inventory import Sale
-
 
 Month = NewType("Month", int)
 
@@ -59,7 +58,7 @@ class ShowRoom:
     daily_sales: list[DailySale] = field(default_factory=list)
 
     def __str__(self):
-        return f"Showroom {self.refrence} ({self.assigned_total_sales} DZD)"
+        return f"Showroom {self.refrence} ({self.assigned_total_sales:,.2f} DZD)"
 
     def __repr__(self):
         return self.__str__()
@@ -79,14 +78,13 @@ class ShowRoom:
         for s in sales:
             self.add_sale(s)
 
-    def add_daily_sales(self, day: int, month: int, year: int, sales: list[Sale]) -> None:
+    def add_daily_sales(
+        self, day: int, month: int, year: int, sales: list[Sale]
+    ) -> None:
         calendar_date = DateUtils.get_non_friday_date(month, day, year)
         self.daily_sales.append(
-            DailySale(
-                day=day, 
-                calendar_date=calendar_date,
-                sales=sales
-            ))
+            DailySale(day=day, calendar_date=calendar_date, sales=sales)
+        )
         # return calendar_date.day
 
     @property
@@ -95,21 +93,21 @@ class ShowRoom:
 
 
 class DateUtils:
-    '''Some Basic date utilities'''
+    """Some Basic date utilities"""
 
     @classmethod
     def is_it_friday(cls, dt: datetime) -> bool:
         FRIDAY = 4
         return dt.weekday() == FRIDAY
-    
+
     @classmethod
-    def get_non_friday_date(cls, month: int, day: int, year: int=2023):
+    def get_non_friday_date(cls, month: int, day: int, year: int = 2023):
         year, month, day = int(year), int(month), int(day)
         try:
             dt = datetime(year, month, day)
         except ValueError:
             # In case of an error push the sales to the next month
-            dt = datetime(year, month+1, 1)
+            dt = datetime(year, month + 1, 1)
         if DateUtils.is_it_friday(dt):
-            return DateUtils.get_non_friday_date(month, day+1, year)
+            return DateUtils.get_non_friday_date(month, day + 1, year)
         return dt.date()

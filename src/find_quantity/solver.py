@@ -75,9 +75,9 @@ class Solver:
         return max_product
 
     def allocate_remaining_products(self, inventory: Inventory) -> list[Sale]:
-        '''
+        """
         Distribute remaining products/packages so all product will be used.
-        '''
+        """
         packages = inventory.get_packages()
         sales = []
         for p in packages:
@@ -85,9 +85,9 @@ class Solver:
         return sales
 
     def generate_equal_qt(self, n: int, summ: int) -> list[int]:
-        '''
+        """
         Generate a list of quantities in shuffled order.
-        '''
+        """
         q, r = divmod(summ, n)
         qt = [q for _ in range(n)]
         for i in range(len(qt)):
@@ -100,10 +100,10 @@ class Solver:
     def distrubute_products_equally(
         self, inventory: Inventory, n: int
     ) -> list[list[Sale]]:
-        '''
+        """
         Distrute packages equally on N customers. Also it shuffles them before generating the sales.
         It purpose to make it look credible that products are distrubted in a randomized manner.
-        '''
+        """
         packages = inventory.get_packages()
         sales = defaultdict(list)
         for p in packages:

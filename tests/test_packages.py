@@ -1,6 +1,5 @@
+from find_quantity.models.package import Package, PackageConstractor
 from find_quantity.models.product import gen_test_product
-from find_quantity.models.package import PackageConstractor, Package
-
 
 
 def test_package_construction_from_definition():
@@ -101,8 +100,9 @@ def test_pacakges_with_products_define_in_more_than_one_package():
     ).construct_packages()
     assert len(pks) == 3
 
+
 def test_pacakges_with_no_package_rules_defined():
-    package_definitions = [ ]
+    package_definitions = []
     product_qt = [
         ("CMD211", 10),
         ("CRG14CL1N", 10),
@@ -119,20 +119,15 @@ def test_pacakges_with_no_package_rules_defined():
     ).construct_packages()
     assert len(pks) == 5
 
+
 def test_package_quantities_in_of_split_products():
-    package_definitions = [ ]
-    p1 = gen_test_product(
-        n_article="AY-X12BBAL",
-        stock_qt=10
-    )
-    p2 = gen_test_product(
-        n_article="AE-X12BBAL",
-        stock_qt=20
-    )
+    package_definitions = []
+    p1 = gen_test_product(n_article="AY-X12BBAL", stock_qt=10)
+    p2 = gen_test_product(n_article="AE-X12BBAL", stock_qt=20)
     products = [p1, p2]
-    
-    pk1 = Package(sub_products=products, stock_lmt=10, n_article='PKG-0')
-    pk2 = Package(sub_products=[p2], stock_lmt=10, n_article='PKG-AY-X12BBAL')
+
+    pk1 = Package(sub_products=products, stock_lmt=10, n_article="PKG-0")
+    pk2 = Package(sub_products=[p2], stock_lmt=10, n_article="PKG-AY-X12BBAL")
 
     pks = PackageConstractor(
         products, package_definitions, allow_incomplete_packages=True

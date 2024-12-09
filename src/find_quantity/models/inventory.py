@@ -1,9 +1,9 @@
 import copy
 from dataclasses import dataclass
 
-from find_quantity.models.product import Product, CannotCheckoutMoreThanStockQTException
 from find_quantity.models.package import Package, PackageConstractor
-from find_quantity.read_merge_configs import PackageDefinitionsConstructor, MergeRule
+from find_quantity.models.product import Product
+from find_quantity.read_merge_configs import MergeRule, PackageDefinitionsConstructor
 
 
 @dataclass
@@ -26,20 +26,22 @@ class Sale:
 
     @property
     def corrected_unit_sold(self):
-        '''
+        """
         TEMPORARY FIX:
-        This hacky fix to show negative quantity for returned products in the reports. 
+        This hacky fix to show negative quantity for returned products in the reports.
         It should be handled at the level of the inventory class
-        '''
+        """
         if self.product.prix < 0:
             return -1 * self.units_sold
         return self.units_sold
 
+
 class Inventory:
-    def __init__(self,
-                 products: list[Product],
-                 merge_rules: list[MergeRule],
-                 ):
+    def __init__(
+        self,
+        products: list[Product],
+        merge_rules: list[MergeRule],
+    ):
         self.merge_rules = merge_rules
         self.products: set[Product] = self._add_products(products)
         self._handle_returned_items()
@@ -61,12 +63,7 @@ class Inventory:
         for s in sales:
             for p in self.products:
                 if s.product == p:
-                    # TODO: Refactor this part to Product.udpate
-                    if (p.stock_qt - s.units_sold) < 0:
-                        raise CannotCheckoutMoreThanStockQTException(
-                            f"{p}:cannot take {s.units_sold} out of {p.stock_qt}"
-                        )
-                    p.stock_qt -= s.units_sold
+                    p.update_qt_stock(qt=s.units_sold, operation="Checkout")
                     break
 
     def _handle_returned_items(self):
@@ -97,16 +94,19 @@ class Inventory:
 
     def __constuct_packages(self):
         n_articles = [p.n_article for p in self.products]
-        package_definitions = PackageDefinitionsConstructor(self.merge_rules)\
-                .make_package_definitions(product_n_articles=n_articles)
-        pkc = PackageConstractor(products=self.products, package_definitions=package_definitions)
+        package_definitions = PackageDefinitionsConstructor(
+            self.merge_rules
+        ).make_package_definitions(product_n_articles=n_articles)
+        pkc = PackageConstractor(
+            products=self.products, package_definitions=package_definitions
+        )
         packages = pkc.construct_packages()
         return packages
 
     def record_sale(self, qt: int, package: Package) -> list[Sale]:
         """Create sale object and return them from here"""
         sales = []
-        package.update_qt_stock(qt=qt, operation='Checkout')
+        package.update_qt_stock(qt=qt, operation="Checkout")
         for product in package.sub_products:
             s = Sale(
                 product=product,

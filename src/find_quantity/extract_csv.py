@@ -1,13 +1,16 @@
+import logging
 from collections import defaultdict
 from pathlib import Path
 
 from find_quantity.commons import IOTools
 from find_quantity.model import Month, Product, Sale, ShowRoom
 
+logger = logging.getLogger("find_quantity.cli")
+
 
 def is_it_empty(value: str):
-    '''Avoid empty values'''
-    if value is None or value == '':
+    """Avoid empty values"""
+    if value is None or value == "":
         raise ValueError
     return value
 
@@ -26,10 +29,10 @@ def extract_products(data: list[dict], path: Path) -> dict[Month, list[Product]]
             rta=row["RTA"],
         )
         try:
-            month = is_it_empty(row['mois'])
+            month = is_it_empty(row["mois"])
             values[month].append(p)
         except ValueError:
-            print(f"{p} line skipped because has an empty month value.")
+            logger.info(f"{p} line skipped because has an empty month value.")
     return dict(sorted(values.items()))
 
 
@@ -42,10 +45,10 @@ def extract_showrooms(data: list[dict], path: Path) -> dict[Month, list[ShowRoom
             assigned_total_sales=row["assigned_total_sales"],
         )
         try:
-            month = is_it_empty(row['mois'])
+            month = is_it_empty(row["mois"])
             values[month].append(s)
         except ValueError:
-            print(f"{s} line skipped because has an empty month value.")
+            logger.info(f"{s} line skipped because has an empty month value.")
     return dict(sorted(values.items()))
 
 
@@ -95,4 +98,3 @@ def load_raw_file(data: list[dict], path: Path):
 if __name__ == "__main__":
     produit = extract_products()
     showrooms = extract_showrooms()
-    print(showrooms)

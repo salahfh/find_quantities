@@ -7,9 +7,9 @@ from find_quantity.model import (
     Sale,
     ShowRoom,
 )
-from find_quantity.models.product import(
+from find_quantity.models.product import (
+    CannotCheckoutMoreThanStockQTException,
     gen_test_product,
-    CannotCheckoutMoreThanStockQTException
 )
 
 
@@ -52,14 +52,14 @@ class TestProduct:
     def test_product_quantity_update_checkout(self):
         p1 = gen_test_product(stock_qt=10)
 
-        p1.update_qt_stock(qt=8, operation='Checkout')
+        p1.update_qt_stock(qt=8, operation="Checkout")
 
         assert p1.stock_qt == 2
 
     def test_product_quantity_update_insert(self):
         p1 = gen_test_product(stock_qt=10)
 
-        p1.update_qt_stock(qt=8, operation='Insert')
+        p1.update_qt_stock(qt=8, operation="Insert")
 
         assert p1.stock_qt == 18
 
@@ -67,8 +67,7 @@ class TestProduct:
         p1 = gen_test_product(stock_qt=10)
 
         with pytest.raises(CannotCheckoutMoreThanStockQTException):
-            p1.update_qt_stock(qt=18, operation='Checkout')
-
+            p1.update_qt_stock(qt=18, operation="Checkout")
 
 
 class TestInvetory:
@@ -115,7 +114,7 @@ class TestInvetory:
 
     def test_inventory_update_product_quantity_with_multiple_sales(self):
         p = gen_test_product()
-        inv = Inventory(products=[p],merge_rules=[])
+        inv = Inventory(products=[p], merge_rules=[])
         s = Sale(product=p, units_sold=2)
         inv.update_quantities(sales=[s, s])
         for pi in inv.products:

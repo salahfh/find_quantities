@@ -8,5 +8,5 @@ def test_date_util_generate_that_is_not_friday():
     year = 2024
 
     dt = DateUtils.get_non_friday_date(month=month, day=day, year=year)
-    
+
     assert dt.weekday() != FRIDAY

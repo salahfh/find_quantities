@@ -50,10 +50,12 @@ class IOTools:
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
                 with open(path, "r") as f:
-                    fieldnames = [field.strip() for field in next(f).split(config.CSV_SEPERATOR)]
-                    reader = csv.DictReader(f,
-                                            fieldnames=fieldnames,
-                                            delimiter=config.CSV_SEPERATOR)
+                    fieldnames = [
+                        field.strip() for field in next(f).split(config.CSV_SEPERATOR)
+                    ]
+                    reader = csv.DictReader(
+                        f, fieldnames=fieldnames, delimiter=config.CSV_SEPERATOR
+                    )
                     data = [row for row in reader]
                     return func(data, *args, **kwargs)
 
@@ -74,7 +76,9 @@ class IOTools:
                 path, header, data = func(*args, **kwargs)
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
-                    writer = csv.writer(f, lineterminator="\n", delimiter=config.CSV_SEPERATOR)
+                    writer = csv.writer(
+                        f, lineterminator="\n", delimiter=config.CSV_SEPERATOR
+                    )
                     if writer_header or mode == "w":
                         writer.writerow(header)
                     for line in data:
@@ -84,11 +88,11 @@ class IOTools:
 
         return decorated
 
-
     # BUG: If you put path before data in the decorated function it'll crash
 
     def from_yml(default_path: Path = None):
-        '''Read yaml file'''
+        """Read yaml file"""
+
         def decorated(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -98,4 +102,5 @@ class IOTools:
                     return func(data, *args, **kwargs)
 
             return wrapper
+
         return decorated

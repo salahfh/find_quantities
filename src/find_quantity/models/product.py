@@ -1,6 +1,9 @@
 import copy
-from typing import Literal
+import logging
 from dataclasses import dataclass
+from typing import Literal
+
+logger = logging.getLogger("find_quantity")
 
 
 class CannotCheckoutMoreThanStockQTException(Exception):
@@ -29,11 +32,11 @@ class Product:
 
     @property
     def corrected_prix(self):
-        '''
+        """
         TEMPORARY FIX:
-        This hacky fix to show positive prices in the reports. 
+        This hacky fix to show positive prices in the reports.
         It should be handled at the level of the inventory class
-        '''
+        """
         return abs(self.prix)
 
     def __str__(self):
@@ -47,7 +50,9 @@ class Product:
 
     def __eq__(self, value):
         if not isinstance(value, Product):
-            raise TypeError(f"{type(value)} not supported")
+            message = f"{type(value)} not supported"
+            logging.exception(message)
+            raise TypeError(message)
         return self.n_article == value.n_article
 
     def __hash__(self):
@@ -59,6 +64,9 @@ class Product:
         if operation == "Checkout":
             qt = -qt
         if self.stock_qt + qt < 0:
+            logging.exception(
+                f"CannotCheckoutMoreThanStockQTException: {self} requested qt: {qt}"
+            )
             raise CannotCheckoutMoreThanStockQTException
         self.stock_qt += qt
 

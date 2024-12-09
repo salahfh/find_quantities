@@ -1,17 +1,21 @@
+import logging
+
+from find_quantity.configs import config
 from find_quantity.extract_csv import (
     extract_calculation_report,
     extract_products,
     extract_showrooms,
 )
-from find_quantity.configs import config
-from find_quantity.read_merge_configs import parse_merge_configs
 from find_quantity.model import Inventory, ShowRoom
+from find_quantity.read_merge_configs import parse_merge_configs
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
 from find_quantity.transformer_csv import (
     ProductTransformer,
     ShowroomTransformer,
 )
+
+logger = logging.getLogger("find_quantity.cli")
 
 
 class SetupFolderStructure:
@@ -27,19 +31,20 @@ class SetupFolderStructure:
 
         quit_ = False
         if not config.RAW_PRODUCTS_DATA.exists():
-            print(message.format(config.RAW_PRODUCTS_DATA, config.PROJECT_FOLDER))
+            logger.info(message.format(config.RAW_PRODUCTS_DATA, config.PROJECT_FOLDER))
             report.write_product_input_template_file(path=config.RAW_PRODUCTS_DATA)
             quit_ = True
 
         if not config.RAW_SHOWROOMS_DATA.exists():
-            print(message.format(config.RAW_SHOWROOMS_DATA, config.PROJECT_FOLDER))
+            logger.info(
+                message.format(config.RAW_SHOWROOMS_DATA, config.PROJECT_FOLDER)
+            )
             report.write_showroom_input_template_file(path=config.RAW_SHOWROOMS_DATA)
             quit_ = True
 
         if not config.MERGE_CONFIG_PATH.exists():
             config.copy_merge_configs()
-            print(f"\nThe {config.MERGE_CONFIG_PATH.name} has been created.")
-
+            logger.info(f"\nThe {config.MERGE_CONFIG_PATH.name} has been created.")
 
         if quit_:
             exit(0)
@@ -51,11 +56,11 @@ class ProcessFilesCommand:
         products = extract_products(path=config.RAW_PRODUCTS_DATA)
         showrooms = extract_showrooms(path=config.RAW_SHOWROOMS_DATA)
         if len(showrooms) != len(products):
-            raise ValueError('Number of months mismatch in showroom.csv and produits.csv')
-        for month, s_list, p_list in \
-            zip(showrooms.keys(),
-                showrooms.values(),
-                products.values()
+            message = "Number of months mismatch in showroom.csv and produits.csv"
+            logger.exception(message)
+            raise ValueError(message)
+        for month, s_list, p_list in zip(
+            showrooms.keys(), showrooms.values(), products.values()
         ):
             p_transfomer = ProductTransformer(products=p_list)
             p_list = p_transfomer.load()
@@ -90,7 +95,7 @@ class CalculateQuantitiesCommand:
                 refrence=f"All_Month_{month}",
                 assigned_total_sales=sum([sh.assigned_total_sales for sh in showrooms]),
             )
-            print(f"Working on {monthly_showroom}", end="  ")
+            logger.info(f"Working on {monthly_showroom}")
             sales = solver.distribute_products_monthly(
                 inventory=inv, target_amount=monthly_showroom.assigned_total_sales
             )
@@ -104,7 +109,6 @@ class CalculateQuantitiesCommand:
             inv.add_products_from_sales(monthly_showroom.sales)
             last_showroom = showrooms[-1]
             for sh in showrooms:
-                print(".", end="")
                 sales = solver.distribute_products_by_showroom(
                     inventory=inv, target_amount=sh.assigned_total_sales
                 )
@@ -113,7 +117,6 @@ class CalculateQuantitiesCommand:
                     sh.add_sales(solver.allocate_remaining_products(inventory=inv))
                 report.write_showrooms_report(month=month, showroom=sh)
                 report.write_metrics(metrics=Metrics(showroom=sh), month=month)
-            print()
 
 
 class DevideProductTo26Days:
@@ -125,15 +128,17 @@ class DevideProductTo26Days:
             path=config.STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
         )
         for month, showrooms in calculation_report.items():
-            print(f"Daily Product Distribution {month}", end="\t")
-            for sh in showrooms.values():
+            logger.info(f"Daily Product Distribution {month}")
+            for i, sh in enumerate(showrooms.values()):
                 # Devide to 26 days
-                print(".", end="")
+                logger.info(f"\t {month}-{i+1:2}: Processing {sh}")
                 inv = Inventory(products=[], merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
                 for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
-                    sh.add_daily_sales(day=day, month=month, year=config.YEAR, sales=sales)
+                    sh.add_daily_sales(
+                        day=day, month=month, year=config.YEAR, sales=sales
+                    )
 
                 # Split by client
                 for day in sh.daily_sales:
@@ -145,7 +150,6 @@ class DevideProductTo26Days:
                     )
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
-            print()
 
 
 if __name__ == "__main__":

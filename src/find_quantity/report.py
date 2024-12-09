@@ -9,7 +9,6 @@ class Report:
     def __init__(self, output_folder: Path = Path("data/output/")) -> None:
         self.skip_zero_quantities: bool = True
         self.output_folder = output_folder
-    
 
     @IOTools.to_csv(mode="w")
     def write_generic_list(self, path, header, data):

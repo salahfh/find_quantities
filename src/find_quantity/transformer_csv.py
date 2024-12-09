@@ -3,10 +3,7 @@ from find_quantity.model import Product, ShowRoom
 
 class Transformers:
     def _fix_numeric_fields(self, price: str):
-        for char, char2 in [
-            (" ", ''),
-            ("%", ''),
-            (",", '.')]:
+        for char, char2 in [(" ", ""), ("%", ""), (",", ".")]:
             price = str(price).replace(char, char2)
         if price in ["", "-"]:
             return 0
