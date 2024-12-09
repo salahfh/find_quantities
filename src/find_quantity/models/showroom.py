@@ -27,6 +27,9 @@ class DailySale:
     calendar_date: datetime
     customers: list[Customer] = field(default_factory=list)
 
+    def __post_init__(self):
+        self.calendar_date_str = self.calendar_date.strftime(r"%Y-%m-%d")
+
     @property
     def sale_total_amount(self) -> float:
         return sum([s.sale_total_amount for s in self.sales])
@@ -84,6 +87,7 @@ class ShowRoom:
                 calendar_date=calendar_date,
                 sales=sales
             ))
+        return calendar_date.day
 
     @property
     def calculated_total_sales(self) -> bool:
@@ -100,7 +104,12 @@ class DateUtils:
     
     @classmethod
     def get_non_friday_date(cls, month: int, day: int, year: int=2023):
-        dt = datetime(int(year), int(month), int(day))
+        year, month, day = int(year), int(month), int(day)
+        try:
+            dt = datetime(year, month, day)
+        except ValueError:
+            # In case of an error push the sales to the next month
+            dt = datetime(year, month+1, 1)
         if DateUtils.is_it_friday(dt):
             return DateUtils.get_non_friday_date(month, day+1, year)
-        return dt.date().strftime("%Y-%m-%d")
+        return dt.date()

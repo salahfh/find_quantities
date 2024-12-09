@@ -171,7 +171,7 @@ class Report:
             (
                 month,
                 showroom.refrence,
-                d.calendar_date,
+                d.calendar_date_str,
                 d.day,
                 c.id,
                 c.get_uniq_id(month, d.day, showroom.refrence),
