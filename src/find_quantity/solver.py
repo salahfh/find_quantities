@@ -104,8 +104,9 @@ class Solver:
         Distrute packages equally on N customers. Also it shuffles them before generating the sales.
         It purpose to make it look credible that products are distrubted in a randomized manner.
         """
-        packages = inventory.get_packages()
         sales = defaultdict(list)
+        packages = inventory.get_packages()
+        packages = random.sample(packages, k=len(packages))
         for p in packages:
             sl = [(p, q) for q in self.generate_equal_qt(n=n, summ=p.stock_qt)]
             random.shuffle(sl)
