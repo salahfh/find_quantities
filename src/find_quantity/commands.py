@@ -127,15 +127,13 @@ class DevideProductTo26Days:
         for month, showrooms in calculation_report.items():
             print(f"Daily Product Distribution {month}", end="\t")
             for sh in showrooms.values():
-                calendar_day = 1
                 # Devide to 26 days
                 print(".", end="")
                 inv = Inventory(products=[], merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
                 for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
-                    calendar_day = sh.add_daily_sales(day=calendar_day, month=month, year=config.YEAR, sales=sales)
-                    calendar_day +=1
+                    sh.add_daily_sales(day=day, month=month, year=config.YEAR, sales=sales)
 
                 # Split by client
                 for day in sh.daily_sales:

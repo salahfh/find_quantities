@@ -5,10 +5,11 @@ from find_quantity.commands import (
     DevideProductTo26Days,
     SetupFolderStructure,
 )
+from find_quantity.cli import CliArgs
 
 WELCOME_MESSAGE = f"""
 {'*'*30}
-Running Find Showrooms Quantities
+Find Showrooms Quantity
 {'*'*30}
 """
 
@@ -16,6 +17,7 @@ Running Find Showrooms Quantities
 def main() -> None:
     print(WELCOME_MESSAGE)
     try:
+        CliArgs().parse_args()
         SetupFolderStructure().execute()
         ProcessFilesCommand().execute()
         CalculateQuantitiesCommand().execute()

@@ -87,7 +87,7 @@ class ShowRoom:
                 calendar_date=calendar_date,
                 sales=sales
             ))
-        return calendar_date.day
+        # return calendar_date.day
 
     @property
     def calculated_total_sales(self) -> bool:

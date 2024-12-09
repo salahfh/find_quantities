@@ -1,3 +1,4 @@
+import importlib.resources
 from dataclasses import dataclass, fields
 from pathlib import Path
 import shutil
@@ -15,7 +16,7 @@ class Config:
     CLEAN_BEFORE_EACH_RUN: bool = True
     CSV_SEPERATOR: str = ';'
     DAYS: int = 26
-    YEAR: int = 2023        # TODO ADD CMD arg to change it
+    YEAR: int = 2023        # Changed with -y via cli arg
 
     def create_folders(self):
         for attr in fields(self):
@@ -35,7 +36,8 @@ class Config:
                 [f.unlink() for f in dir.glob("*")]
     
     def copy_merge_configs(self):
-        config_template_path = Path(__file__).parents[2] / r"templates/product_merge_rules.yml"
+        template_dir = Path(importlib.resources.files('find_quantity')) 
+        config_template_path = template_dir / r"templates/product_merge_rules.yml"
         if not self.MERGE_CONFIG_PATH.exists():
             shutil.copy(
                 config_template_path,
