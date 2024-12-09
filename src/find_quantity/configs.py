@@ -38,7 +38,7 @@ class Config:
     
     def copy_merge_configs(self):
         package_files = importlib.resources.files(find_quantity)
-        merge_conf_template = package_files / "templates" / "product_merge_rules.yml"
+        merge_conf_template = package_files / "templates" /"product_merge_rules.yml"
         if not self.MERGE_CONFIG_PATH.exists():
             shutil.copy(
                 merge_conf_template,

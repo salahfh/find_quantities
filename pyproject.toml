@@ -14,3 +14,6 @@ dependencies = [
 
 [project.scripts]
 find_quantity = "find_quantity.app:main"
+
+[tool.setuptools.package-data]
+"*" = ["*.yml"]

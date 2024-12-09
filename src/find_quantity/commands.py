@@ -37,8 +37,8 @@ class SetupFolderStructure:
             quit_ = True
 
         if not config.MERGE_CONFIG_PATH.exists():
-            print(f"\nThe {config.MERGE_CONFIG_PATH.name} has been created.")
             config.copy_merge_configs()
+            print(f"\nThe {config.MERGE_CONFIG_PATH.name} has been created.")
 
 
         if quit_:
