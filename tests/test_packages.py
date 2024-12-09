@@ -1,5 +1,5 @@
 from find_quantity.models.product import gen_test_product
-from find_quantity.models.packages import PackageConstractor, Package
+from find_quantity.models.package import PackageConstractor, Package
 
 
 

@@ -1,9 +1,6 @@
-import importlib.resources
 from dataclasses import dataclass, fields
 from pathlib import Path
-import shutil
 
-import find_quantity
 
 @dataclass
 class Config:
@@ -37,6 +34,10 @@ class Config:
                 [f.unlink() for f in dir.glob("*")]
     
     def copy_merge_configs(self):
+        import importlib.resources
+        import shutil
+        import find_quantity
+
         package_files = importlib.resources.files(find_quantity)
         merge_conf_template = package_files / "templates" /"product_merge_rules.yml"
         if not self.MERGE_CONFIG_PATH.exists():

@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass
 
 from find_quantity.models.product import Product, CannotCheckoutMoreThanStockQTException
-from find_quantity.models.packages import Package, PackageConstractor
+from find_quantity.models.package import Package, PackageConstractor
 from find_quantity.read_merge_configs import PackageDefinitionsConstructor, MergeRule
 
 
