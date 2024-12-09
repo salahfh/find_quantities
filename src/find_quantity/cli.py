@@ -1,5 +1,3 @@
-import importlib.metadata
-import subprocess 
 import argparse
 
 import find_quantity.configs as C
@@ -14,7 +12,7 @@ class CliArgs:
                             "--year",
                             type=int,
                             default=2023,
-                            help="Select The year of the data")
+                            help=f"Select The year of the data. Default is {C.config.YEAR}")
         self.parser.add_argument("-u",
                             "--update",
                             action="store_true",
@@ -33,15 +31,26 @@ class CliArgs:
             C.config.YEAR = args.year
 
         if args.version:
+            import importlib.metadata
+
             version = importlib.metadata.version('find_quantity')
             print(f'version {version}')
             exit()
 
         if args.update:
+            import subprocess
+
             url = "git+https://github.com/salahfh/find_quantities.git"
-            subprocess.run(["pip", "install", url])
-            print('Update finished')
-            exit()
+
+            try:
+                subprocess.run(
+                    ["pip", "install", url],
+                    check=True)
+                print('Update finished. run find_quantity --version to confirm the new version')
+            except subprocess.CalledProcessError:
+                print("Update failed!")
+            finally:
+                exit()
             
 
 
