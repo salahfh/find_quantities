@@ -95,10 +95,12 @@ class Solver:
             if r < 0:
                 break
             qt[i] += 1
+        random.shuffle(qt)
         return qt
 
     def distrubute_products_equally(
-        self, inventory: Inventory, n: int
+        self, inventory: Inventory,
+        n: int, 
     ) -> list[list[Sale]]:
         """
         Distrute packages equally on N customers. Also it shuffles them before generating the sales.
@@ -108,10 +110,9 @@ class Solver:
         packages = inventory.get_packages()
         packages = random.sample(packages, k=len(packages))
         for p in packages:
-            sl = [(p, q) for q in self.generate_equal_qt(n=n, summ=p.stock_qt)]
-            random.shuffle(sl)
-            sl = [inventory.record_sale(package=p, qt=q) for p, q in sl]
-            for i, s in enumerate(sl):
+            eqaul_qt_list = [(p, q) for q in self.generate_equal_qt(n=n, summ=p.stock_qt)]
+            sales_list_packaged = [inventory.record_sale(package=p, qt=q) for p, q in eqaul_qt_list]
+            for i, s in enumerate(sales_list_packaged):
                 sales[i] += s
         return sales.values()
 

@@ -142,11 +142,11 @@ class DevideProductTo26Days:
 
                 # Split by client
                 for day in sh.daily_sales:
-                    customers = day.total_units_sold
+                    nb_customers = day.total_units_sold
                     inv = Inventory(products=[], merge_rules=merge_rules)
                     inv.add_products_from_sales(day.sales)
                     sales_per_customer = solver.distrubute_products_equally(
-                        inv, customers
+                        inv, nb_customers
                     )
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
@@ -155,7 +155,7 @@ class DevideProductTo26Days:
 if __name__ == "__main__":
     from find_quantity.logs import logger
 
-    config.clean_up()
-    c = ProcessFilesCommand().execute()
-    c = CalculateQuantitiesCommand().execute()
-    # c = DevideProductTo26Days().execute()
+    # config.clean_up()
+    # c = ProcessFilesCommand().execute()
+    # c = CalculateQuantitiesCommand().execute()
+    c = DevideProductTo26Days().execute()

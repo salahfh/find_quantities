@@ -187,7 +187,7 @@ class Report:
             )
             for d in showroom.daily_sales
             for c in d.customers
-            for pur in c.purchase
+            for pur in c.purchases
             if pur.units_sold
         ]
         return path, header, data

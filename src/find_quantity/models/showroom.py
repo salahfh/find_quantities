@@ -11,12 +11,12 @@ Month = NewType("Month", int)
 @dataclass
 class Customer:
     id: int
-    purchase: list[Sale]
+    purchases: list[Sale]
 
     def get_uniq_id(self, month: Month, day: int, showroom_name: str) -> str:
         key = "".join((str(s) for s in [month, day, self.id, showroom_name]))
         hash_ = md5(key.encode("utf-8")).hexdigest()
-        return f"C{hash_[0:10]}".upper()
+        return f"C{hash_[0:15]}".upper()
 
 
 @dataclass
@@ -37,9 +37,9 @@ class DailySale:
     def total_units_sold(self) -> float:
         return sum([s.units_sold for s in self.sales])
 
-    def add_customer_sales(self, sales: list[Sale]) -> None:
-        for i, sale in enumerate(sales):
-            pur = Customer(id=i + 1, purchase=sale)
+    def add_customer_sales(self, daily_sales: list[list[Sale]]) -> None:
+        for i, sale in enumerate(daily_sales):
+            pur = Customer(id=i + 1, purchases=sale)
             self.customers.append(pur)
 
     def __repr__(self):
