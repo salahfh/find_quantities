@@ -2,18 +2,27 @@ ProductMergeRules:
   - rule: auto-merge -I and -O products
     command: AutoMergeIOProducts
 
-  - rule: auto-merge NCE with CMD
+  - rule: auto-merge CRG with CMD
     command: MergeBasedOnPattern
-    pattern: '^(NCE)\d{3}.*'
+    pattern: "CRG.*"
     packages:
       - products:
           - CMD211
       - products:
           - CMD300
 
-  - rule: auto-merge KCG with CMD
+  - rule: auto-merge RGB with CMD
     command: MergeBasedOnPattern
-    pattern: '^(KCG)\d{3}.*'
+    pattern: "RGB.*"
+    packages:
+      - products:
+          - CMD211
+      - products:
+          - CMD300
+
+  - rule: auto-merge RGK with CMD
+    command: MergeBasedOnPattern
+    pattern: "RGK.*"
     packages:
       - products:
           - CMD211
@@ -28,7 +37,4 @@ ProductMergeRules:
           - AY-X12BBAL
       - products:
           - CMD211
-          - CRG14CL1N
-      - products:
-          - CMD211
-          - CRG-CP1000G
+          - RSI24
