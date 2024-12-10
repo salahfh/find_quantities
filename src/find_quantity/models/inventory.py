@@ -81,7 +81,9 @@ class Inventory:
     def get_packages(self, all: bool = False) -> list[Package]:
         if all:
             return self.packages
-        return tuple(p for p in self.packages if p.stock_qt > 0)
+        return sorted(
+            tuple(p for p in self.packages if p.stock_qt > 0),
+            key= lambda p: p.stock_qt)
 
     def add_products_from_sales(self, sales: list[Sale]) -> None:
         products = list()

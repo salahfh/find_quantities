@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from find_quantity.commons import IOTools
-from find_quantity.model import Product, ShowRoom
+from find_quantity.models import Product, ShowRoom
 from find_quantity.solver import Metrics
 
 

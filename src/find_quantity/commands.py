@@ -6,7 +6,7 @@ from find_quantity.extract_csv import (
     extract_products,
     extract_showrooms,
 )
-from find_quantity.model import Inventory, ShowRoom
+from find_quantity.models import Inventory, ShowRoom
 from find_quantity.read_merge_configs import parse_merge_configs
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
@@ -153,6 +153,9 @@ class DevideProductTo26Days:
 
 
 if __name__ == "__main__":
-    # c = GeneratePackagesCommand().execute()
-    # c = CalculateQuantitiesCommand().execute()
-    c = DevideProductTo26Days().execute()
+    from find_quantity.logs import logger
+
+    config.clean_up()
+    c = ProcessFilesCommand().execute()
+    c = CalculateQuantitiesCommand().execute()
+    # c = DevideProductTo26Days().execute()

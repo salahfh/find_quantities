@@ -38,3 +38,6 @@ ProductMergeRules:
       - products:
           - CMD211
           - RSI24
+      - products:
+          - CMD300
+          - RSI24

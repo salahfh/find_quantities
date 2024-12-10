@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from find_quantity.model import (
+from find_quantity.models import (
     Inventory,
     Sale,
     ShowRoom,

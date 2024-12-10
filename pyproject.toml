@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "find_quantity"
 description = "find_quantity help solve calcuation of quantity."
-version = "1.0.11"
+version = "1.0.12"
 authors = [ {name = "Salah Eddine Saoud", email = "saoud92@gmail.com"} ]
 license = {file = "LICENSE"}
 dependencies = [

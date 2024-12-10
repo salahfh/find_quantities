@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import partialmethod
 
-from find_quantity.model import Inventory, Product, Sale, ShowRoom
+from find_quantity.models import Package, Inventory, Sale, ShowRoom
 
 
 @dataclass
@@ -46,7 +46,6 @@ class Solver:
         sales = []
         while notsolved:
             packages = inventory.get_packages()
-            product_percentage += 0.001
             for p in packages:
                 max_product = self.determine_max_product(product_percentage, p)
                 for q in range(max_product, 0, -1):
@@ -61,15 +60,16 @@ class Solver:
             if len(packages) == 0 or attempts < 0:
                 break
             attempts -= 1
+            product_percentage += 0.005
         return sales
 
     distribute_products_by_showroom = partialmethod(
-        distrubute_maximum_of_all_products, product_percentage=0.1, attempts=100
+        distrubute_maximum_of_all_products, product_percentage=0.01, attempts=100
     )
 
     distribute_products_monthly = partialmethod(distrubute_maximum_of_all_products)
 
-    def determine_max_product(self, product_percentage: float, p: Product):
+    def determine_max_product(self, product_percentage: float, p: Package):
         max_product = int(p.stock_qt * product_percentage)
         max_product = min(p.stock_qt, max_product) if max_product > 0 else p.stock_qt
         return max_product

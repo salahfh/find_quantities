@@ -1,4 +1,4 @@
-from find_quantity.model import Product, Sale
+from find_quantity.models import Product, Sale
 
 
 def get_sale_of_product(product: Product, sales: list[Sale]) -> Sale:

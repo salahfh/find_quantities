@@ -1,4 +1,4 @@
-from find_quantity.model import Product, ShowRoom
+from find_quantity.models import Product, ShowRoom
 
 
 class Transformers:
