@@ -60,14 +60,16 @@ class Solver:
             if len(packages) == 0 or attempts < 0:
                 break
             attempts -= 1
-            product_percentage += 0.005
+            product_percentage += 0.001
         return sales
 
     distribute_products_by_showroom = partialmethod(
         distrubute_maximum_of_all_products, product_percentage=0.01, attempts=100
     )
 
-    distribute_products_monthly = partialmethod(distrubute_maximum_of_all_products)
+    distribute_products_monthly = partialmethod(
+        distrubute_maximum_of_all_products, product_percentage=1, attempts=100
+    )
 
     def determine_max_product(self, product_percentage: float, p: Package):
         max_product = int(p.stock_qt * product_percentage)
