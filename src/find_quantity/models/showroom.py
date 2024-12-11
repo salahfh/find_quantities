@@ -106,8 +106,8 @@ class DateUtils:
         try:
             dt = datetime(year, month, day)
         except ValueError:
-            # In case of an error push the sales to the next month
-            dt = datetime(year, month + 1, 1)
+            # In case of an error push the sales to the first month
+            dt = datetime(year, month, 1)
         if DateUtils.is_it_friday(dt):
             return DateUtils.get_non_friday_date(month, day + 1, year)
         return dt.date()
