@@ -18,7 +18,7 @@ class Config:
     CLEAN_BEFORE_EACH_RUN: bool = True
     CSV_SEPERATOR: str = ';'
     DAYS: int = 26
-    YEAR: int = 2023        # Changed with -y via cli arg
+    YEAR: int = 2024        # Changed with -y via cli arg
 
     def create_folders(self):
         for attr in fields(self):

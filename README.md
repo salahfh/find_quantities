@@ -39,7 +39,7 @@ To use the program follow these steps below
 * `-h`: display the help menu
 * `-v`: prints out the software version
 * `-u`: perform update of the software to the latest version in the repo
-* `-y YEAR`: specify the year of the data for the final date generation. The default is 2023.
+* `-y YEAR`: specify the year of the data for the final date generation. The default is 2024.
 
 
 ## Merge Rules

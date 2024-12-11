@@ -17,7 +17,7 @@ class CliArgs:
             "-y",
             "--year",
             type=int,
-            default=2023,
+            default=C.config.YEAR,
             help=f"Select The year of the data. Default is {C.config.YEAR}",
         )
         self.parser.add_argument(
