@@ -84,7 +84,8 @@ class CalculateQuantitiesCommand:
         ):
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
-            inv = Inventory(products=products, merge_rules=merge_rules)
+            inv = Inventory(merge_rules=merge_rules)
+            inv.add_products(products=products)
             solver = Solver()
 
             # Filter showrooms with zero sales
@@ -105,7 +106,7 @@ class CalculateQuantitiesCommand:
             )
 
             # # Single Showrooms - Recreate new products list
-            inv = Inventory(products=[], merge_rules=merge_rules)
+            inv = Inventory(merge_rules=merge_rules)
             inv.add_products_from_sales(monthly_showroom.sales)
             last_showroom = showrooms[-1]
             for sh in showrooms:
@@ -132,7 +133,7 @@ class DevideProductTo26Days:
             for i, sh in enumerate(showrooms.values()):
                 # Devide to 26 days
                 logger.info(f"\t {month}-{i+1:2}: Processing {sh}")
-                inv = Inventory(products=[], merge_rules=merge_rules)
+                inv = Inventory(merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
                 for day, sales in zip(range(1, config.DAYS + 1), daily_sales):
@@ -143,7 +144,7 @@ class DevideProductTo26Days:
                 # Split by client
                 for day in sh.daily_sales:
                     nb_customers = day.total_units_sold
-                    inv = Inventory(products=[], merge_rules=merge_rules)
+                    inv = Inventory(merge_rules=merge_rules)
                     inv.add_products_from_sales(day.sales)
                     sales_per_customer = solver.distrubute_products_equally(
                         inv, nb_customers

@@ -2,7 +2,7 @@ from typing import Literal
 
 from find_quantity.models.product import Product
 
-ALLOW_INCOMPLETE_PACKAGES = True
+ALLOW_INCOMPLETE_PACKAGES = False
 
 
 class Package:

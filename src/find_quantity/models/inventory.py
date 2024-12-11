@@ -39,15 +39,13 @@ class Sale:
 class Inventory:
     def __init__(
         self,
-        products: list[Product],
         merge_rules: list[MergeRule],
     ):
         self.merge_rules = merge_rules
-        self.products: set[Product] = self._add_products(products)
-        self._handle_returned_items()
-        self.packages: list[Package] = self.__constuct_packages()
+        self.products: set[Product] = None
+        self.packages: list[Package] = None
 
-    def _add_products(self, products: list[Product]):
+    def add_products(self, products: list[Product]):
         products_inv: set[Product] = set()
         for p in products:
             for p_inv in products_inv:
@@ -57,7 +55,10 @@ class Inventory:
                     break
             else:
                 products_inv.add(copy.copy(p))
-        return products_inv
+        self.products = products_inv
+        self._handle_returned_items()
+        self.packages = self.__constuct_packages()
+        return self.products
 
     def update_quantities(self, sales: list[Sale]):
         for s in sales:
@@ -83,7 +84,8 @@ class Inventory:
             return self.packages
         return sorted(
             tuple(p for p in self.packages if p.stock_qt > 0),
-            key= lambda p: p.stock_qt)
+            key= lambda p: len(p.sub_products), 
+            reverse=True)
 
     def add_products_from_sales(self, sales: list[Sale]) -> None:
         products = list()
@@ -91,7 +93,7 @@ class Inventory:
             p = copy.copy(s.product)
             p.stock_qt = s.units_sold
             products.append(p)
-        self.products = self._add_products(products=products)
+        self.products = self.add_products(products=products)
         self.packages: list[Package] = self.__constuct_packages()
 
     def __constuct_packages(self):

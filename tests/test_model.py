@@ -73,7 +73,8 @@ class TestProduct:
 class TestInvetory:
     def test_inventory(self):
         p = gen_test_product()
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products(products=[p])
         assert len(inv.products) == 1
 
     def test_inventory_add_n_different_products(self):
@@ -83,12 +84,14 @@ class TestInvetory:
             products.append(p)
 
         assert len(products) == n
-        inv = Inventory(products=products, merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products(products=products)
         assert len(inv.products) == n
 
     def test_add_same_product_twice_update_stock_quantity(self):
         p = gen_test_product(stock_qt=10)
-        inv = Inventory(products=[p, p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products(products=[p, p])
         assert len(inv.get_products()) == 1
         assert inv.get_products()[0].stock_qt == 20
 
@@ -97,14 +100,16 @@ class TestInvetory:
         products = []
         for i in range(1, 10):
             products.append(p)
-        inv = Inventory(products=products, merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products(products)
         assert len(inv.get_products()) == 1
         assert len(products) == i
         assert inv.get_products()[0].stock_qt == 10 * i
 
     def test_inventory_update_product_quantity_with_one_sale(self):
         p = gen_test_product()
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         s = Sale(product=p, units_sold=2)
         inv.update_quantities(sales=[s])
         for pi in inv.products:
@@ -114,7 +119,8 @@ class TestInvetory:
 
     def test_inventory_update_product_quantity_with_multiple_sales(self):
         p = gen_test_product()
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         s = Sale(product=p, units_sold=2)
         inv.update_quantities(sales=[s, s])
         for pi in inv.products:
@@ -124,7 +130,8 @@ class TestInvetory:
 
     def test_inventory_update_product_quantity_with_no_sales_made(self):
         p = gen_test_product()
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         inv.update_quantities(sales=[])
         for pi in inv.products:
             if pi.designation == p.designation:
@@ -133,7 +140,8 @@ class TestInvetory:
 
     def test_inventory_update_product_quantity_with_below_zero(self):
         p = gen_test_product(stock_qt=10)
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         s = Sale(product=p, units_sold=10)
         with pytest.raises(CannotCheckoutMoreThanStockQTException):
             inv.update_quantities(sales=[s, s])
@@ -144,7 +152,8 @@ class TestInvetory:
 
     def test_inventory_returned_item_only(self):
         p = gen_test_product(stock_qt=-1, prix=10)
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         assert len(inv.get_products()) == 1
         p_out = inv.get_products()[0]
         assert p_out.returned
@@ -154,7 +163,8 @@ class TestInvetory:
     def test_inventory_returned_and_more_non_return_items(self):
         p = gen_test_product(stock_qt=-1, prix=10)
         p2 = gen_test_product(stock_qt=10)
-        inv = Inventory(products=[p, p2], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p, p2])
 
         assert len(inv.get_products()) == 1
         p_out = inv.get_products()[0]
@@ -165,7 +175,8 @@ class TestInvetory:
     def test_inventory_more_returned_than_non_return_items(self):
         p = gen_test_product(stock_qt=-10, prix=10)
         p2 = gen_test_product(stock_qt=1)
-        inv = Inventory(products=[p, p2], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p, p2])
 
         assert len(inv.get_products()) == 1
         p_out = inv.get_products()[0]
@@ -175,7 +186,8 @@ class TestInvetory:
 
     def test_inventory_update_with_returned_products(self):
         p = gen_test_product(stock_qt=-10)
-        inv = Inventory(products=[p], merge_rules=[])
+        inv = Inventory(merge_rules=[])
+        inv.add_products([p])
         s = Sale(product=p, units_sold=9)
         inv.update_quantities(sales=[s])
         for pi in inv.products:
