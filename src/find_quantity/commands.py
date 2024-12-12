@@ -1,16 +1,16 @@
 import logging
 
 from find_quantity.configs import config
-from find_quantity.extract_csv import (
+from find_quantity.acquire_data.extract_csv import (
     extract_calculation_report,
     extract_products,
     extract_showrooms,
 )
 from find_quantity.models import Inventory, ShowRoom
-from find_quantity.read_merge_configs import parse_merge_configs
+from find_quantity.acquire_data.read_merge_configs import parse_merge_configs
 from find_quantity.report import Report
 from find_quantity.solver import Metrics, Solver
-from find_quantity.transformer_csv import (
+from find_quantity.acquire_data.transformer_csv import (
     ProductTransformer,
     ShowroomTransformer,
 )
@@ -154,7 +154,7 @@ class DevideProductTo26Days:
 
 
 if __name__ == "__main__":
-    from find_quantity.logs import logger
+    from find_quantity.utils.logs import logger
 
     # config.clean_up()
     # c = ProcessFilesCommand().execute()

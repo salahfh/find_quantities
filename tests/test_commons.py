@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from find_quantity.commons import IOTools
+from find_quantity.utils.commons import IOTools
 
 TEST_FOLDER = Path("tests")
 

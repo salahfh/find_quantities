@@ -1,4 +1,4 @@
-from find_quantity.read_merge_configs import MergeRule, PackageDefinitionsConstructor
+from find_quantity.acquire_data.read_merge_configs import MergeRule, PackageDefinitionsConstructor
 
 
 def test_merge_product_names_with_i_o_n_article():

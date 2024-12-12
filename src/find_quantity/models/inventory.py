@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from find_quantity.models.package import Package, PackageConstractor
 from find_quantity.models.product import Product
-from find_quantity.read_merge_configs import MergeRule, PackageDefinitionsConstructor
+from find_quantity.acquire_data.read_merge_configs import MergeRule, PackageDefinitionsConstructor
 
 
 @dataclass
