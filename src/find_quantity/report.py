@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from find_quantity.commons import IOTools
+from find_quantity.utils.commons import IOTools
 from find_quantity.models import Product, ShowRoom
 from find_quantity.solver import Metrics
 
@@ -9,25 +9,6 @@ class Report:
     def __init__(self, output_folder: Path = Path("data/output/")) -> None:
         self.skip_zero_quantities: bool = True
         self.output_folder = output_folder
-
-    @IOTools.to_csv(mode="w")
-    def write_generic_list(self, path, header, data):
-        return path, header, data
-
-    @IOTools.to_csv(mode="a")
-    def write_generic_list_of_dicts(
-        self, ld: list[dict], filename: str, split_values: str = None
-    ):
-        path = self.output_folder / f"{filename}.csv"
-        header = ld[0].keys()
-        data = [tuple(d.values()) for d in ld]
-        if split_values:
-            for portion in split_values:
-                chunk = [row for row in data if row[0] == portion]
-                path2 = path.parents[0] / f"{path.stem}_{portion}.csv"
-                self.write_generic_list(path2, header, chunk)
-            data = []
-        return path, header, data
 
     @IOTools.to_csv(mode="a")
     def write_showrooms_report(

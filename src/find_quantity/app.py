@@ -6,7 +6,7 @@ from find_quantity.commands import (
     ProcessFilesCommand,
     SetupFolderStructure,
 )
-from find_quantity.logs import logger, logging
+from find_quantity.utils.logs import logger, logging
 
 file_logger = logging.getLogger("find_quantity")
 

@@ -154,7 +154,7 @@ class DevideProductTo26Days:
 
 
 if __name__ == "__main__":
-    from find_quantity.logs import logger
+    from find_quantity.utils.logs import logger
 
     # config.clean_up()
     # c = ProcessFilesCommand().execute()

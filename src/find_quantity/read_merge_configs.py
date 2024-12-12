@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from find_quantity.commons import IOTools
+from find_quantity.utils.commons import IOTools
 
 logger = logging.getLogger("find_quantity.cli")
 

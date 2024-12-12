@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
-from find_quantity.commons import IOTools
+from find_quantity.utils.commons import IOTools
 from find_quantity.models import Month, Product, Sale, ShowRoom
 
 logger = logging.getLogger("find_quantity.cli")
