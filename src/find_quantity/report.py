@@ -184,7 +184,6 @@ class Report:
             "RTA",
             "TEE",
             "stock_qt",
-            "intial_stock_qt",
         ]
         data = []
         return path, header, data
