@@ -127,8 +127,9 @@ class Report:
         return path, header, data
 
     @IOTools.to_csv(mode="a")
-    def write_daily_sales(self, month: int, showroom: ShowRoom) -> None:
-        path = self.output_folder / "daily_sales.csv"
+    def write_daily_sales(self, month: int, showroom: ShowRoom, path=None) -> None:
+        if path is None:
+            path = self.output_folder / "daily_sales.csv"
         header = [
             "mois",
             "showroom",
@@ -196,4 +197,47 @@ class Report:
             "assigned_total_sales",
         ]
         data = []
+        return path, header, data
+
+    @IOTools.to_csv(mode="a")
+    def write_bon_de_mouvement(self, month: int, showroom: ShowRoom) -> None:
+        path = self.output_folder / "bon_de_mouvement.csv"
+        header = [
+            "mois",
+            "showroom",
+            "date",
+            "day",
+            "n_article",
+            "designation",
+            "groupe_code",
+            "prix",
+            "RTA",
+            "TEE",
+            "TVA",
+            "Units_sold",
+            "Total",
+            "Total TTC",
+        ]
+        data = [
+            (
+                month,
+                showroom.refrence,
+                d.calendar_date_str,
+                d.day,
+                pur.product.n_article,
+                pur.product.designation,
+                pur.product.groupe_code,
+                pur.product.corrected_prix,
+                pur.product.rta,
+                pur.product.tee,
+                pur.product.tva,
+                pur.corrected_unit_sold,
+                pur.sale_total_amount,
+                pur.total_ttc,
+            )
+            for d in showroom.daily_sales
+            for c in d.customers
+            for pur in c.purchases
+            if pur.units_sold
+        ]
         return path, header, data

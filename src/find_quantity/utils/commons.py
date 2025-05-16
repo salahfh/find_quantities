@@ -64,7 +64,7 @@ class IOTools:
         return decorated
 
     @classmethod
-    def to_csv(cls, mode: Literal["a", "w"]):
+    def to_csv(cls, mode: Literal["a", "w"], seperator=config.CSV_SEPERATOR):
         """A decorator to write to csv file.
 
         func -> return filename, header, data
@@ -77,7 +77,7 @@ class IOTools:
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
                     writer = csv.writer(
-                        f, lineterminator="\n", delimiter=config.CSV_SEPERATOR
+                        f, lineterminator="\n", delimiter=seperator
                     )
                     if writer_header or mode == "w":
                         writer.writerow(header)

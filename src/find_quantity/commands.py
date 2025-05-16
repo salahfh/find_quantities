@@ -1,4 +1,5 @@
 import logging
+import random
 
 from find_quantity.configs import config
 from find_quantity.acquire_data.extract_csv import (
@@ -82,6 +83,10 @@ class CalculateQuantitiesCommand:
         for month, p_list, s_list in zip(
             p_list_all.keys(), p_list_all.values(), s_list_all.values()
         ):
+            # # TODO: Remove this later
+            # if int(month) >= 2:
+            #     break
+
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
             inv = Inventory(merge_rules=merge_rules)
@@ -132,7 +137,7 @@ class DevideProductTo26Days:
             logger.info(f"Daily Product Distribution {month}")
             for i, sh in enumerate(showrooms.values()):
                 # Devide to 26 days
-                logger.info(f"\t {month}-{i+1:2}: Processing {sh}")
+                logger.info(f"\t {month}-{i + 1:2}: Processing {sh}")
                 inv = Inventory(merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
                 daily_sales = solver.distrubute_products_equally(inv, config.DAYS)
@@ -151,6 +156,71 @@ class DevideProductTo26Days:
                     )
                     day.add_customer_sales(sales_per_customer)
                 report.write_daily_sales(month=month, showroom=sh)
+
+
+class DevideProductBonDeMoument:
+    # Same function as the DevideProductTo26Days but with less days.
+    MAX_MONTHLY_SHIPPMENTS = 4
+    MIN_MONTHLY_SHIPPMENTS = 2
+    MIN_RANDOM_DAYS_DIFFERENCE = 3
+
+    def execute(self):
+        solver = Solver()
+        report = Report(output_folder=config.STEP_THREE_VALIDATE_PATH)
+        merge_rules = parse_merge_configs(path=config.MERGE_CONFIG_PATH)
+        calculation_report: dict[int, dict[str, ShowRoom]] = extract_calculation_report(
+            path=config.STEP_TWO_CALCULATE_PATH / "showrooms_calculation_report.csv"
+        )
+        for month, showrooms in calculation_report.items():
+            logger.info(f"Bon De Mouvement Generation {month}")
+            for i, sh in enumerate(showrooms.values()):
+                # Devide to random days
+                DAYS_COUNT = random.randint(
+                    self.MIN_MONTHLY_SHIPPMENTS, self.MAX_MONTHLY_SHIPPMENTS
+                )
+                random_days = self.gen_random_days(DAYS_COUNT)
+
+                logger.info(
+                    f"\t {month}-{i + 1:2}: Processing {sh} - Random Days Count {DAYS_COUNT}:  [{random_days}]"
+                )
+                inv = Inventory(merge_rules=merge_rules)
+                inv.add_products_from_sales(sh.sales)
+                daily_sales = solver.distrubute_products_equally(inv, DAYS_COUNT)
+                for day, sales in zip(random_days, daily_sales):
+                    sh.add_daily_sales(
+                        day=day,
+                        month=month,
+                        year=config.YEAR,
+                        sales=sales,
+                    )
+
+                # Split by client
+                for day in sh.daily_sales:
+                    nb_customers = day.total_units_sold
+                    inv = Inventory(merge_rules=merge_rules)
+                    inv.add_products_from_sales(day.sales)
+                    sales_per_customer = solver.distrubute_products_equally(
+                        inv, nb_customers
+                    )
+                    day.add_customer_sales(sales_per_customer)
+                report.write_bon_de_mouvement(
+                    month=month,
+                    showroom=sh,
+                )
+
+    def gen_random_days(self, days_count: int) -> list[int]:
+        days = []
+        while len(days) < days_count:
+            random_day = random.choice(range(1, 32))
+            if any(
+                [
+                    abs(random_day - day) < self.MIN_RANDOM_DAYS_DIFFERENCE
+                    for day in days
+                ]
+            ):
+                continue
+            days.append(random_day)
+        return days
 
 
 if __name__ == "__main__":

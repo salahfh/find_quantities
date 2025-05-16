@@ -5,6 +5,7 @@ from find_quantity.commands import (
     DevideProductTo26Days,
     ProcessFilesCommand,
     SetupFolderStructure,
+    DevideProductBonDeMoument,
 )
 from find_quantity.utils.logs import logger, logging
 
@@ -12,9 +13,9 @@ file_logger = logging.getLogger("find_quantity")
 
 
 WELCOME_MESSAGE = f"""
-{'*'*30}
+{"*" * 30}
 Find Showrooms Quantity
-{'*'*30}
+{"*" * 30}
 """
 
 
@@ -26,6 +27,7 @@ def main() -> None:
         ProcessFilesCommand().execute()
         CalculateQuantitiesCommand().execute()
         DevideProductTo26Days().execute()
+        DevideProductBonDeMoument().execute()
     except FileNotFoundError as e:
         file_logger.exception(e)
         logger.error(
