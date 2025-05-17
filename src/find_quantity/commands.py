@@ -84,8 +84,8 @@ class CalculateQuantitiesCommand:
             p_list_all.keys(), p_list_all.values(), s_list_all.values()
         ):
             # TODO: Remove this later
-            if int(month) >= 2:
-                break
+            # if int(month) >= 2:
+            #     break
 
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
