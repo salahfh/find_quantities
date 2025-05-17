@@ -83,9 +83,9 @@ class CalculateQuantitiesCommand:
         for month, p_list, s_list in zip(
             p_list_all.keys(), p_list_all.values(), s_list_all.values()
         ):
-            # # TODO: Remove this later
-            # if int(month) >= 2:
-            #     break
+            # TODO: Remove this later
+            if int(month) >= 2:
+                break
 
             products = ProductTransformer(products=p_list).load()
             showrooms = ShowroomTransformer(showrooms=s_list).load()
@@ -185,7 +185,7 @@ class DevideProductBonDeMoument:
                 )
                 inv = Inventory(merge_rules=merge_rules)
                 inv.add_products_from_sales(sh.sales)
-                daily_sales = solver.distrubute_products_equally(inv, DAYS_COUNT)
+                daily_sales = solver.distrubute_products_randomly(inv, DAYS_COUNT)
                 for day, sales in zip(random_days, daily_sales):
                     sh.add_daily_sales(
                         day=day,
@@ -194,7 +194,7 @@ class DevideProductBonDeMoument:
                         sales=sales,
                     )
 
-                # Split by client
+                # Split by client - Delete this section?
                 for day in sh.daily_sales:
                     nb_customers = day.total_units_sold
                     inv = Inventory(merge_rules=merge_rules)

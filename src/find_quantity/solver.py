@@ -1,9 +1,43 @@
+import math
 import random
+from typing import Callable
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import partialmethod
 
 from find_quantity.models import Package, Inventory, Sale, ShowRoom
+
+
+
+def generate_equal_qt(sample_length: int, quantity_to_divide: int) -> list[int]:
+    """
+    Generate a list of quantities in shuffled order.
+    """
+    q, r = divmod(quantity_to_divide, sample_length)
+    qt = [q for _ in range(sample_length)]
+    for i in range(len(qt)):
+        r -= 1
+        if r < 0:
+            break
+        qt[i] += 1
+    random.shuffle(qt)
+    return qt
+
+
+def generate_random_qt(
+    sample_length: int, quantity_to_divide: int
+) -> list[int]:
+    """
+    Generate a list of random quantities in shuffled order.
+
+    URL: https://www.reddit.com/r/learnpython/comments/cpwxpe/generate_n_random_integers_which_all_add_up_to_a/
+    """
+    rand_n = [random.random() for i in range(sample_length)]
+    result = [math.floor(i * quantity_to_divide / sum(rand_n)) for i in rand_n]
+    # randomly add missing numbers
+    for _ in range(quantity_to_divide - sum(result)):
+        result[random.randint(0, sample_length-1)] += 1
+    return result
 
 
 @dataclass
@@ -86,23 +120,11 @@ class Solver:
             sales += inventory.record_sale(qt=p.stock_qt, package=p)
         return sales
 
-    def generate_equal_qt(self, n: int, summ: int) -> list[int]:
-        """
-        Generate a list of quantities in shuffled order.
-        """
-        q, r = divmod(summ, n)
-        qt = [q for _ in range(n)]
-        for i in range(len(qt)):
-            r -= 1
-            if r < 0:
-                break
-            qt[i] += 1
-        random.shuffle(qt)
-        return qt
-
-    def distrubute_products_equally(
-        self, inventory: Inventory,
-        n: int, 
+    def distrubute_products(
+        self,
+        inventory: Inventory,
+        n: int,
+        quantity_distributor: Callable
     ) -> list[list[Sale]]:
         """
         Distrute packages equally on N customers. Also it shuffles them before generating the sales.
@@ -112,12 +134,19 @@ class Solver:
         packages = inventory.get_packages()
         packages = random.sample(packages, k=len(packages))
         for p in packages:
-            eqaul_qt_list = [(p, q) for q in self.generate_equal_qt(n=n, summ=p.stock_qt)]
+            eqaul_qt_list = [(p, q) for q in quantity_distributor(n, p.stock_qt)]
             sales_list_packaged = [inventory.record_sale(package=p, qt=q) for p, q in eqaul_qt_list]
             for i, s in enumerate(sales_list_packaged):
                 sales[i] += s
         return sales.values()
 
+    distrubute_products_equally = partialmethod(
+        distrubute_products, quantity_distributor=generate_equal_qt
+    )
+
+    distrubute_products_randomly = partialmethod(
+        distrubute_products, quantity_distributor=generate_random_qt
+    )
 
 if __name__ == "__main__":
     pass

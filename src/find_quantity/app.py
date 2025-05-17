@@ -26,7 +26,7 @@ def main() -> None:
         SetupFolderStructure().execute()
         ProcessFilesCommand().execute()
         CalculateQuantitiesCommand().execute()
-        DevideProductTo26Days().execute()
+        # DevideProductTo26Days().execute()
         DevideProductBonDeMoument().execute()
     except FileNotFoundError as e:
         file_logger.exception(e)
