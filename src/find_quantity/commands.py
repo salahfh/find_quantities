@@ -194,15 +194,6 @@ class DevideProductBonDeMoument:
                         sales=sales,
                     )
 
-                # Split by client - Delete this section?
-                for day in sh.daily_sales:
-                    nb_customers = day.total_units_sold
-                    inv = Inventory(merge_rules=merge_rules)
-                    inv.add_products_from_sales(day.sales)
-                    sales_per_customer = solver.distrubute_products_equally(
-                        inv, nb_customers
-                    )
-                    day.add_customer_sales(sales_per_customer)
                 report.write_bon_de_mouvement(
                     month=month,
                     showroom=sh,

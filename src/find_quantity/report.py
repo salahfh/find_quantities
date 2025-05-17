@@ -224,20 +224,22 @@ class Report:
                 showroom.refrence,
                 d.calendar_date_str,
                 d.day,
-                pur.product.n_article,
-                pur.product.designation,
-                pur.product.groupe_code,
-                pur.product.corrected_prix,
-                pur.product.rta,
-                pur.product.tee,
-                pur.product.tva,
-                pur.corrected_unit_sold,
-                pur.sale_total_amount,
-                pur.total_ttc,
+                s.product.n_article,
+                s.product.designation,
+                s.product.groupe_code,
+                s.product.corrected_prix,
+                s.product.rta,
+                s.product.tee,
+                s.product.tva,
+                s.corrected_unit_sold,
+                s.sale_total_amount,
+                s.total_ttc,
             )
             for d in showroom.daily_sales
-            for c in d.customers
-            for pur in c.purchases
-            if pur.units_sold
+            for s in d.sales
+            # for c in d.customers
+            # for pur in c.purchases
+            # if pur.units_sold
+            if s.units_sold
         ]
         return path, header, data
