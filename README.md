@@ -40,6 +40,7 @@ To use the program follow these steps below
 * `-v`: prints out the software version
 * `-u`: perform update of the software to the latest version in the repo
 * `-y YEAR`: specify the year of the data for the final date generation. The default is 2025.
+* `-e ENCODING`: specify type of encodin. the default is latin-1
 
 
 ## Merge Rules

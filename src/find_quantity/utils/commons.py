@@ -49,15 +49,24 @@ class IOTools:
                 # path = default_path
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
-                with open(path, "r") as f:
-                    fieldnames = [
-                        field.strip() for field in next(f).split(config.CSV_SEPERATOR)
-                    ]
-                    reader = csv.DictReader(
-                        f, fieldnames=fieldnames, delimiter=config.CSV_SEPERATOR
+                try:
+                    with open(path, "r", encoding=config.ENCODING) as f:
+                        fieldnames = [
+                            field.strip()
+                            for field in next(f).split(config.CSV_SEPERATOR)
+                        ]
+                        reader = csv.DictReader(
+                            f, fieldnames=fieldnames, delimiter=config.CSV_SEPERATOR
+                        )
+                        data = [row for row in reader]
+                        return func(data, *args, **kwargs)
+                except UnicodeDecodeError as e:
+                    print("Encoding Error", e, end="\n" * 3)
+                    print(
+                        "Error: Try the program with the flag -e for exmaple 'find_quantity -e latin-1'"
                     )
-                    data = [row for row in reader]
-                    return func(data, *args, **kwargs)
+
+                    exit(1)
 
             return wrapper
 

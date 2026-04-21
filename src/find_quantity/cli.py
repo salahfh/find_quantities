@@ -21,6 +21,11 @@ class CliArgs:
             help=f"Select The year of the data. Default is {C.config.YEAR}",
         )
         self.parser.add_argument(
+            "-e",
+            "--encoding",
+            help=f"Set the encoding. Default is {C.config.ENCODING}",
+        )
+        self.parser.add_argument(
             "-u",
             "--update",
             action="store_true",
@@ -38,6 +43,9 @@ class CliArgs:
 
         if args.year:
             C.config.YEAR = args.year
+
+        if args.encoding:
+            C.config.ENCODING = args.encoding
 
         if args.version:
             import importlib.metadata
