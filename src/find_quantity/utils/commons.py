@@ -2,11 +2,14 @@ import csv
 import inspect
 from functools import wraps
 from pathlib import Path
+import logging
 from typing import Callable, Literal
 
 import yaml
 
 from find_quantity.configs import config
+
+logger = logging.getLogger(__name__)
 
 
 def get_default_args(func: Callable) -> dict:
@@ -21,7 +24,7 @@ def get_default_args(func: Callable) -> dict:
 def choose_call_arg(
     target_arg: str, func: Callable, kwargs: dict, hardcoded_value: Path
 ) -> str:
-    """Chose the value for the call argument.
+    """Choose the value for the call argument.
 
     The value supplied in the call takes precedance over the default.
     Works only with kwargs."""
@@ -36,7 +39,7 @@ def choose_call_arg(
 
 class IOTools:
     @classmethod
-    def from_csv(cls, default_path: Path = None):
+    def from_csv(cls, default_path: Path | None = None):
         """A decorator to read to csv file.
 
         func (data, *args, **kwargs)
@@ -85,9 +88,7 @@ class IOTools:
                 path, header, data = func(*args, **kwargs)
                 writer_header = True if not path.exists() else False
                 with open(path, mode) as f:
-                    writer = csv.writer(
-                        f, lineterminator="\n", delimiter=seperator
-                    )
+                    writer = csv.writer(f, lineterminator="\n", delimiter=seperator)
                     if writer_header or mode == "w":
                         writer.writerow(header)
                     for line in data:

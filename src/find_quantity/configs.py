@@ -14,9 +14,9 @@ class Config:
     STEP_ONE_TRANSFORM_PATH: Path = PROJECT_FOLDER / "output" / "1-Transform"
     STEP_TWO_CALCULATE_PATH: Path = PROJECT_FOLDER / "output" / "2-Calculate"
     STEP_THREE_VALIDATE_PATH: Path = PROJECT_FOLDER / "output" / "3-Validate"
-    MERGE_CONFIG_PATH: Path = PROJECT_FOLDER / 'product_merge_rules.yml'
+    MERGE_CONFIG_PATH: Path = PROJECT_FOLDER / "product_merge_rules.yml"
     CLEAN_BEFORE_EACH_RUN: bool = True
-    CSV_SEPERATOR: str = ';'
+    CSV_SEPERATOR: str = ";"
     ENCODING: str = "latin-1"
     DAYS: int = 26
     YEAR: int = 2025  # Changed with -y via cli arg
@@ -37,18 +37,16 @@ class Config:
         ]:
             if dir.exists():
                 [f.unlink() for f in dir.glob("*")]
-    
+
     def copy_merge_configs(self):
         import importlib.resources
         import shutil
         import find_quantity
 
         package_files = importlib.resources.files(find_quantity)
-        merge_conf_template = package_files / "templates" /"product_merge_rules.yml"
+        merge_conf_template = package_files / "templates" / "product_merge_rules.yml"
         if not self.MERGE_CONFIG_PATH.exists():
-            shutil.copy(
-                merge_conf_template,
-                self.MERGE_CONFIG_PATH)
+            shutil.copy(merge_conf_template, self.MERGE_CONFIG_PATH)
 
 
 config = Config()
