@@ -162,6 +162,8 @@ class Report:
             "Units_sold",
             "Total",
             "Total TTC",
+            "Ticket-Number",
+            "Etat-De-Vente",
         ]
         data = [
             (
@@ -186,6 +188,8 @@ class Report:
                 pur.corrected_unit_sold,
                 pur.sale_total_amount,
                 pur.total_ttc,
+                c.ticket_number(d.etat_vente_number(showroom.code_showroom)),
+                d.etat_vente_number(showroom.code_showroom),
             )
             for d in showroom.daily_sales
             for c in d.customers

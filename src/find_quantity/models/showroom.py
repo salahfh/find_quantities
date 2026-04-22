@@ -1,3 +1,4 @@
+from functools import cache
 from dataclasses import dataclass, field
 from datetime import datetime
 from hashlib import md5
@@ -18,6 +19,14 @@ class Customer:
         hash_ = md5(key.encode("utf-8")).hexdigest()
         return f"C{hash_[0:15]}".upper()
 
+    def ticket_number(self, etat_vente_number_str: str) -> str:
+        return "-".join(
+            [
+                etat_vente_number_str,
+                str(self.id),
+            ]
+        )
+
 
 @dataclass
 class DailySale:
@@ -36,6 +45,9 @@ class DailySale:
     @property
     def total_units_sold(self) -> float:
         return sum([s.units_sold for s in self.sales])
+
+    def etat_vente_number(self, code_showroom: str) -> str:
+        return cached_showroom_etat_number(self.calendar_date, code_showroom)
 
     def add_customer_sales(self, daily_sales: list[list[Sale]]) -> None:
         for i, sale in enumerate(daily_sales):
@@ -117,3 +129,15 @@ class DateUtils:
         if DateUtils.is_it_friday(dt):
             return DateUtils.get_non_friday_date(month, day + 1, year)
         return dt.date()
+
+
+@cache
+def cached_showroom_etat_number(date: datetime, code_showroom: str) -> str:
+    """Cached version for faster calculation"""
+    return "-".join(
+        [
+            date.strftime(r"%Y-%m"),
+            code_showroom,
+            str(date.day),
+        ]
+    )
