@@ -54,6 +54,12 @@ class DailySale:
 class ShowRoom:
     refrence: str
     assigned_total_sales: float
+    droit_timbre: float
+    code_showroom: str
+    address: str
+    ai: float
+    rc: float
+
     sales: list[Sale] = field(default_factory=list)
     daily_sales: list[DailySale] = field(default_factory=list)
 

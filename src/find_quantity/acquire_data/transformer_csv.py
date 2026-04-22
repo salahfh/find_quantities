@@ -53,6 +53,11 @@ class ShowroomTransformer(Transformers):
             s = ShowRoom(
                 refrence=s.refrence,
                 assigned_total_sales=self._fix_numeric_fields(s.assigned_total_sales),
+                droit_timbre=s.droit_timbre,
+                code_showroom=s.code_showroom,
+                address=s.address,
+                ai=s.ai,
+                rc=s.rc,
             )
             cleaned.append(s)
         return cleaned

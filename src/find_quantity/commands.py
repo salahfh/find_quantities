@@ -100,6 +100,11 @@ class CalculateQuantitiesCommand:
             monthly_showroom = ShowRoom(
                 refrence=f"All_Month_{month}",
                 assigned_total_sales=sum([sh.assigned_total_sales for sh in showrooms]),
+                droit_timbre=showrooms[0].droit_timbre,
+                code_showroom=showrooms[0].code_showroom,
+                rc=showrooms[0].rc,
+                ai=showrooms[0].ai,
+                address=showrooms[0].address,
             )
             logger.info(f"Working on {monthly_showroom}")
             sales = solver.distribute_products_monthly(
