@@ -38,6 +38,13 @@ def main() -> None:
     except KeyboardInterrupt:
         logger.info("Bye!")
 
+    except Exception as e:
+        file_logger.exception(e)
+        logger.exception(e)
+        logger.info("")
+
+        CliArgs().parser.print_help()
+
 
 if __name__ == "__main__":
     main()
