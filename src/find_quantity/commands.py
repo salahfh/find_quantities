@@ -1,6 +1,8 @@
 import logging
 import random
 
+import duckdb
+
 from find_quantity.configs import config
 from find_quantity.acquire_data.extract_csv import (
     extract_calculation_report,
@@ -217,6 +219,111 @@ class DevideProductBonDeMoument:
                 continue
             days.append(random_day)
         return days
+
+
+class CalculateDroitDeTimbre:
+    def execute(self):
+        logger.info("Droit de Timbre Calculation")
+        input_file = config.STEP_THREE_VALIDATE_PATH / "daily_sales.csv"
+        output_file = input_file
+
+        conn = duckdb.connect(input_file)
+        conn.sql("""
+        CREATE OR REPLACE TEMP TABLE daily_sales_dt AS (
+            WITH agg AS (
+                -- Select columns
+                SELECT
+                    showroom
+                    , "Droit-Timbre" AS Showroom_MAX_DT
+                    , customer_id
+                    , sum("Total TTC") AS customer_total_ttc
+                    ,
+                FROM
+                    daily_sales
+                GROUP BY
+                    showroom
+                    , Showroom_MAX_DT
+                    , customer_id
+            )
+            , calculate_dt AS (
+                -- Calculate DT per customer
+                SELECT
+                    *
+                    , CASE WHEN (customer_total_ttc > 100_000) THEN .02 * customer_total_ttc
+                           WHEN (customer_total_ttc > 30_000) THEN .015 * customer_total_ttc
+                           WHEN (customer_total_ttc > 300) THEN .01 * customer_total_ttc
+                           ELSE 0
+                      END AS dt_calculated_per_c
+                FROM
+                    agg
+            )
+            , dt_added AS (
+                SELECT
+                    -- Add dt_cummulative_sh (per showroom), and dt_declarer_c (per customer)
+                    *
+                    , sum(dt_calculated_per_c) OVER (PARTITION BY showroom ORDER BY customer_id) AS DT_calculated_cumulative_sh
+                    , CASE WHEN DT_calculated_cumulative_sh > Showroom_MAX_DT THEN 0
+                           ELSE dt_calculated_per_c
+                      END dt_declarer_c
+                FROM
+                    calculate_dt
+            )
+            , joined AS (
+                -- distribute values based on percentage
+                SELECT
+                    o.*
+                    , "Total TTC" / n.customer_total_ttc AS total_ttc_percentage
+                    , n.dt_calculated_per_c * total_ttc_percentage AS dt_calculated
+                    , n.dt_declarer_c * total_ttc_percentage AS dt_declarer
+                    , n.DT_calculated_cumulative_sh
+                FROM
+                    daily_sales AS o
+                    LEFT JOIN dt_added n ON n.customer_id = o.customer_id
+            )
+            -- Order and return final columns
+            SELECT
+                mois
+                , showroom
+                , "Code-Showroom"
+                , Address
+                , "Droit-Timbre"
+                , AI
+                , RC
+                , date
+                , day
+                , c_id
+                , upper(md5(customer_id)) AS customer_id
+                , n_article
+                , designation
+                , groupe_code
+                , prix
+                , RTA
+                , TEE
+                , TVA
+                , Units_sold
+                , Total
+                , "Total TTC"
+                , dt_calculated
+                , dt_declarer
+                , "Ticket-Number"
+                , "Etat-De-Vente"
+            FROM
+                JOINED
+            ORDER BY
+                showroom
+                , date
+                , c_id
+            );
+             """)
+
+        conn.sql(f"""
+            COPY (
+                SELECT
+                    *
+                FROM
+                    daily_sales_dt)
+                TO '{output_file}' (HEADER , DELIMITER ';');
+              """)
 
 
 if __name__ == "__main__":

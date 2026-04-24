@@ -1,6 +1,7 @@
 import find_quantity.configs as C
 from find_quantity.cli import CliArgs, wrap
 from find_quantity.commands import (
+    CalculateDroitDeTimbre,
     CalculateQuantitiesCommand,
     DevideProductTo26Days,
     ProcessFilesCommand,
@@ -28,6 +29,8 @@ def main() -> None:
         CalculateQuantitiesCommand().execute()
         DevideProductBonDeMoument().execute()
         DevideProductTo26Days().execute()
+        CalculateDroitDeTimbre().execute()
+        logger.info("Finished!")
     except FileNotFoundError as e:
         file_logger.exception(e)
         logger.error(
