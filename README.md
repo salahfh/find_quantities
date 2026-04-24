@@ -32,7 +32,11 @@ To use the program follow these steps below
 * Open a `PowerShell` window from windows start menu
 * Change to the folder `cd bin`
 * Activate the virtual enviroment `.\venv\Scripts\activate`
-* Run the command `find_quantity` and follow the instructions if it doesn't work run `python -m find_quantity`
+* Run the command `find_quantity` and follow the instructions (if it doesn't work run `python -m find_quantity`)
+
+
+### How to change the year?
+* Run the command `find_quantity -y 2023`
 
 
 ### Flags/Options
