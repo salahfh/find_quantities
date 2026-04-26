@@ -27,6 +27,13 @@ class CliArgs:
             "Other options include 'utf-8', 'latin-1'",
         )
         self.parser.add_argument(
+            "-s",
+            "--saperator",
+            choices=["windows", "unix"],
+            default="windows",
+            help=f"Set the saperator of csv file. Default is {'windows (";")' if C.config.CSV_SEPERATOR == ';' else 'unix (",")'}. ",
+        )
+        self.parser.add_argument(
             "-u",
             "--update",
             action="store_true",
@@ -47,6 +54,9 @@ class CliArgs:
 
         if args.encoding:
             C.config.IN_ENCODING = args.encoding
+
+        if sep := args.saperator:
+            C.config.CSV_SEPERATOR = ";" if sep == "windows" else ","
 
         if args.version:
             import importlib.metadata
