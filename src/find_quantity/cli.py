@@ -23,7 +23,8 @@ class CliArgs:
         self.parser.add_argument(
             "-e",
             "--encoding",
-            help=f"Set the encoding. Default is {C.config.IN_ENCODING}",
+            help=f"Set the encoding. Default is {C.config.IN_ENCODING}. "
+            "Other options include 'utf-8', 'latin-1'",
         )
         self.parser.add_argument(
             "-u",
