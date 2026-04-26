@@ -17,7 +17,8 @@ class Config:
     MERGE_CONFIG_PATH: Path = PROJECT_FOLDER / "product_merge_rules.yml"
     CLEAN_BEFORE_EACH_RUN: bool = True
     CSV_SEPERATOR: str = ";"
-    ENCODING: str = "latin-1"
+    IN_ENCODING: str = "latin-1"
+    OUT_ENCODING: str = "utf-8"
     DAYS: int = 26
     YEAR: int = 2025  # Changed with -y via cli arg
 

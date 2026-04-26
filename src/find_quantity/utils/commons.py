@@ -53,7 +53,7 @@ class IOTools:
                 # if path is None:    # the default path arg should be also evaluated
                 path = Path(choose_call_arg("path", func, kwargs, default_path))
                 try:
-                    with open(path, "r", encoding=config.ENCODING) as f:
+                    with open(path, "r", encoding=config.IN_ENCODING) as f:
                         fieldnames = [
                             field.strip()
                             for field in next(f).split(config.CSV_SEPERATOR)
@@ -65,8 +65,10 @@ class IOTools:
                         return func(data, *args, **kwargs)
                 except UnicodeDecodeError as e:
                     print("Encoding Error", e, end="\n" * 3)
+                    print(f"Encoding error with the file '{default_path}'")
                     print(
                         "Error: Try the program with the flag -e for exmaple 'find_quantity -e latin-1'"
+                        "or 'find_quantity -e utf-8' or 'find_quantity -e cp1252'"
                     )
 
                     exit(1)
@@ -87,7 +89,7 @@ class IOTools:
             def wrapper(*args, **kwargs):
                 path, header, data = func(*args, **kwargs)
                 writer_header = True if not path.exists() else False
-                with open(path, mode) as f:
+                with open(path, mode, encoding=config.OUT_ENCODING) as f:
                     writer = csv.writer(f, lineterminator="\n", delimiter=seperator)
                     if writer_header or mode == "w":
                         writer.writerow(header)

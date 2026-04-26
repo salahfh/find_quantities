@@ -23,7 +23,7 @@ class CliArgs:
         self.parser.add_argument(
             "-e",
             "--encoding",
-            help=f"Set the encoding. Default is {C.config.ENCODING}",
+            help=f"Set the encoding. Default is {C.config.IN_ENCODING}",
         )
         self.parser.add_argument(
             "-u",
@@ -45,7 +45,7 @@ class CliArgs:
             C.config.YEAR = args.year
 
         if args.encoding:
-            C.config.ENCODING = args.encoding
+            C.config.IN_ENCODING = args.encoding
 
         if args.version:
             import importlib.metadata
