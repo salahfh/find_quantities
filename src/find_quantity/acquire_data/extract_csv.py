@@ -43,11 +43,11 @@ def extract_showrooms(data: list[dict], path: Path) -> dict[Month, list[ShowRoom
         s = ShowRoom(
             refrence=row["refrence"],
             assigned_total_sales=row["assigned_total_sales"],
-            droit_timbre=row.get("Droit-Timbre", 0),
-            code_showroom=row.get("Code-Showroom", ""),
-            address=row.get("Address", ""),
-            ai=row.get("AI", 0),
-            rc=row.get("RC", 0),
+            droit_timbre=row["Droit-Timbre"],
+            code_showroom=row["Code-Showroom"],
+            address=row["Address"],
+            ai=row["AI"],
+            rc=row["RC"],
         )
         try:
             month = is_it_empty(row["mois"])

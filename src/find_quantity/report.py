@@ -107,8 +107,29 @@ class Report:
     @IOTools.to_csv(mode="a")
     def write_showroom_transformed(self, showrooms: list[ShowRoom], month: int):
         path = self.output_folder / "showrooms_transformed.csv"
-        header = ["mois", "refrence", "assigned_total_sales"]
-        data = [(month, s.refrence, s.assigned_total_sales) for s in showrooms]
+        header = [
+            "mois",
+            "refrence",
+            "assigned_total_sales",
+            "Code-Showroom",
+            "Address",
+            "Droit-Timbre",
+            "AI",
+            "RC",
+        ]
+        data = [
+            (
+                month,
+                s.refrence,
+                s.assigned_total_sales,
+                s.code_showroom,
+                s.address,
+                s.droit_timbre,
+                s.ai,
+                s.rc,
+            )
+            for s in showrooms
+        ]
         return path, header, data
 
     @IOTools.to_csv(mode="a")
