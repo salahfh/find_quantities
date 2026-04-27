@@ -20,10 +20,10 @@ class Customer:
         return f"C{hash_[0:15]}".upper()
 
     def ticket_number(self, etat_vente_number_str: str) -> str:
-        return "-".join(
+        return "".join(
             [
                 etat_vente_number_str,
-                str(self.id),
+                str(self.id).rjust(3, "0"),
             ]
         )
 
@@ -138,6 +138,6 @@ def cached_showroom_etat_number(date: datetime, code_showroom: str) -> str:
         [
             date.strftime(r"%Y-%m"),
             code_showroom,
-            str(date.day),
+            str(date.day).rjust(2, "0"),
         ]
     )
